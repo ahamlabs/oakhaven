@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OAKHAVEN — ASCII engine</title>
+<style>
+:root{
+  --void:#060708;
+  --oil:#11171a;
+  --fog:#4c585f;
+  --bone:#cbbfae;
+  --rust:#8a4b2a;
+  --sodium:#d9a441;
+  --phosphor:#18c866;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--void);
+  color:var(--bone);
+  font-family:var(--mono);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+#cabinet{
+  width:min(96vw, 1180px);
+  display:flex;flex-direction:column;gap:0;
+}
+#viewport{
+  position:relative;
+  background:#000;
+  border:1px solid #1d2529;
+  overflow:hidden;
+}
+#screen{display:block;width:100%;height:auto;image-rendering:pixelated}
+
+/* CRT treatment — scanlines + vignette, both cheap and non-animated */
+#viewport::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(to bottom, rgba(0,0,0,.34) 0 1px, rgba(0,0,0,0) 1px 3px),
+    radial-gradient(ellipse 78% 72% at 50% 50%, rgba(0,0,0,0) 42%, rgba(0,0,0,.82) 100%);
+  mix-blend-mode:multiply;
+}
+
+/* ── Instrument band. Diegetic: gauges are drawn in the same charset as the world. ── */
+#band{
+  display:flex;align-items:stretch;gap:0;
+  border:1px solid #1d2529;border-top:none;
+  background:linear-gradient(#0b1013,#080b0d);
+  font-size:12px;
+}
+.gauge{
+  flex:1;padding:9px 12px;border-right:1px solid #161d21;
+  display:flex;flex-direction:column;gap:4px;min-width:0;
+}
+.gauge:last-child{border-right:none}
+.gauge b{
+  font-weight:400;font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:#5d6b73;
+}
+.gauge span{
+  white-space:pre;font-size:13px;letter-spacing:-.02em;
+  color:var(--fog);transition:color .5s linear;
+}
+.gauge.warn span{color:var(--sodium)}
+.gauge.crit span{color:var(--rust)}
+.gauge.phos span{color:var(--phosphor)}
+
+/* ── Dialogue: bottom-anchored teleprompter, not a floating box ── */
+#dialogue{
+  position:absolute;left:0;right:0;bottom:0;
+  background:linear-gradient(rgba(6,7,8,0) 0%, rgba(6,7,8,.94) 22%, #060708 100%);
+  padding:56px 30px 22px;
+  display:none;flex-direction:column;gap:14px;
+}
+#dialogue.on{display:flex}
+#speaker{
+  font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--sodium);
+}
+#line{font-size:15px;line-height:1.62;color:var(--bone);max-width:74ch}
+#choices{display:flex;flex-direction:column;gap:5px;margin-top:2px}
+.choice{
+  background:none;border:none;color:var(--fog);font:inherit;font-size:13.5px;
+  text-align:left;padding:4px 0 4px 26px;position:relative;cursor:pointer;
+  transition:color .12s;
+}
+.choice::before{
+  content:attr(data-k);position:absolute;left:0;color:#39444a;
+}
+.choice:hover,.choice:focus-visible{color:var(--bone);outline:none}
+.choice:hover::before,.choice:focus-visible::before{color:var(--sodium)}
+.choice .tag{color:var(--rust);font-size:11px;letter-spacing:.12em}
+.choice .tag.h{color:#4d7fa8}
+.choice .tag.p{color:var(--phosphor)}
+
+#toast{
+  position:absolute;top:16px;left:50%;transform:translateX(-50%);
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--sodium);opacity:0;transition:opacity .35s;pointer-events:none;
+  text-shadow:0 0 14px rgba(217,164,65,.5);
+}
+#toast.on{opacity:1}
+
+#prompt{
+  position:absolute;left:0;right:0;bottom:0;top:0;background:#000;
+  display:none;flex-direction:column;justify-content:center;padding:0 40px;gap:10px;
+}
+#prompt.on{display:flex}
+#prompt p{color:var(--phosphor);font-size:14px;line-height:1.7;white-space:pre-wrap}
+#prompt input{
+  background:none;border:none;color:var(--phosphor);font:inherit;font-size:15px;
+  outline:none;width:100%;caret-color:var(--phosphor);
+}
+
+#boot{
+  position:absolute;inset:0;background:var(--void);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;
+  text-align:center;padding:30px;
+}
+#boot.off{display:none}
+#boot h1{
+  font-size:clamp(30px,6vw,58px);font-weight:400;letter-spacing:.5em;
+  color:var(--bone);text-indent:.5em;
+}
+#boot .sub{font-size:11px;letter-spacing:.34em;color:#4a565c;text-transform:uppercase}
+#boot .keys{font-size:12px;color:var(--fog);line-height:2;max-width:46ch}
+#boot .keys em{color:var(--bone);font-style:normal}
+#boot button{
+  margin-top:6px;background:none;border:1px solid var(--rust);color:var(--sodium);
+  font:inherit;font-size:12px;letter-spacing:.26em;padding:11px 30px;cursor:pointer;
+  text-transform:uppercase;transition:background .18s,color .18s;
+}
+#boot button:hover,#boot button:focus-visible{background:var(--rust);color:#0b0705;outline:none}
+@media (prefers-reduced-motion: reduce){ .gauge span{transition:none} }
+</style>
+</head>
+<body>
+<div id="cabinet">
+  <div id="viewport">
+    <canvas id="screen"></canvas>
+    <div id="toast"></div>
+    <div id="dialogue">
+      <div id="speaker"></div>
+      <div id="line"></div>
+      <div id="choices"></div>
+    </div>
+    <div id="prompt"><p id="promptText"></p><input id="promptIn" autocomplete="off" spellcheck="false" aria-label="Command line"></div>
+    <div id="boot">
+      <div>
+        <h1>OAKHAVEN</h1>
+        <div class="sub">Oregon &nbsp;·&nbsp; population 1,204 &nbsp;·&nbsp; falling</div>
+      </div>
+      <div class="keys">
+        <em>W A S D</em> move &nbsp; <em>mouse</em> or <em>← →</em> look<br>
+        <em>Shift</em> run &nbsp; <em>E</em> interact &nbsp; <em>Esc</em> release cursor<br>
+        <em>1–4</em> answer in conversation
+      </div>
+      <button id="startBtn">Get out of the car</button>
+    </div>
+  </div>
+  <div id="band">
+    <div class="gauge" id="gStress"><b>Stress</b><span></span></div>
+    <div class="gauge" id="gSober"><b>Sobriety</b><span></span></div>
+    <div class="gauge" id="gAlign"><b>Read on the world</b><span></span></div>
+    <div class="gauge" id="gFrag"><b>Enochian</b><span></span></div>
+    <div class="gauge" id="gLoc"><b>Location</b><span></span></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════════════════════
+   OAKHAVEN — ASCII raycasting engine
+   Rendering model:
+     · walls   → DDA raycast, density-mapped through an ASCII ramp, textured
+     · floors  → per-column floor casting, so roads/sidewalks are real surfaces
+     · sprites → ASCII art bitmaps, depth-sorted against a per-column z-buffer
+     · glitch  → post-pass that corrupts the character buffer (Acts III–IV)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Screen config ─────────────────────────────────────────────────────── */
+const COLS = 132, ROWS = 54, CELL_W = 8, CELL_H = 14;
+const FOV_PLANE = 0.72;          // half-width of the camera plane; ~72° FOV
+const VIEW_DIST = 22;            // fog cutoff in world units
+
+/* Brightness ramp. Index 0 = void, last = full. Pure ASCII, 15 steps. */
+const RAMP = " .,:;-~=+*#%&@$";
+
+/* Palettes run dark→light in 8 steps. Distance shading indexes into these,
+   so fog is free: far surfaces land near index 0, which is almost black. */
+const PAL = {
+  brick: ['#0a0807','#1a1210','#2b1e18','#3d2a20','#523629','#674433','#7d523d','#946148'],
+  wood:  ['#0a0806','#181310','#281f18','#3a2c21','#4d3a2b','#614936','#755840','#8a684b'],
+  glass: ['#050809','#0b1216','#121e24','#1a2b33','#233a44','#2d4a56','#375a68','#426b7b'],
+  steel: ['#070808','#131515','#202323','#2e3232','#3d4242','#4d5252','#5d6363','#6e7474'],
+  crt:   ['#02120a','#04381c','#065a2c','#08803e','#0aa550','#18c866','#3ce084','#7af0ae'],
+  flesh: ['#0d0505','#200a0a','#331010','#471616','#5c1d1d','#722525','#8a2f2f','#a33b3b'],
+  fog:   ['#060708','#0d1012','#151a1d','#1e2428','#283034','#333c41','#3f4a50','#4c585f'],
+  tar:   ['#060707','#0c0e0f','#131617','#1b1f21','#24292b','#2e3436','#383f42','#434b4e'],
+  sod:   ['#0a0805','#1a1309','#2b1f0e','#3d2d14','#523c1a','#674c21','#7d5c28','#946d30'],
+};
+
+/* 8×8 brightness textures, digits 0–9. Walls get real surface detail this way. */
+const TEX = {
+  '#': ["77777767","77767777","66666666","76777777","77777677","66666666","77677777","77777777"], // brick + mortar
+  'W': ["88888888","88888888","44444444","99999999","88888888","44444444","99999999","88888888"], // boarded planks
+  'G': ["33333333","34444443","34222243","34222243","34222243","34444443","33333333","33333333"], // grimy window
+  '=': ["96396396","96396396","96396396","96396396","96396396","96396396","96396396","96396396"], // corrugated steel
+  '+': ["66666666","69999996","69666696","69666696","69669696","69666696","69999996","66666666"], // door
+  'T': ["22222222","29999992","29222292","29288292","29222292","29999992","22222222","22222222"], // CRT terminal
+  'F': ["78988987","89777798","97888879","88979988","79888897","88778878","97889798","87998789"], // living wall (Act IV)
+};
+const MAT = { '#':'brick','W':'wood','G':'glass','=':'steel','+':'wood','T':'crt','F':'flesh' };
+const SOLID = "#WG=+TF";
+const DOOR = '+', TERMINAL = 'T';
+
+/* Floor surface textures, sampled in world space. */
+const FLOOR_TEX = {
+  '.': ["33333333","33433333","33333343","34333333","33333334","33343333","43333333","33333433"], // asphalt
+  ',': ["55555555","55555555","55555555","11111111","55555555","55555555","55555555","11111111"], // sidewalk slabs
+  ' ': ["22322232","32223222","22232223","23222322","22322232","32223222","22232223","23222322"], // dirt
+  'o': ["66666666","61111116","66666666","66666666","61111116","66666666","66666666","66666666"], // interior boards
+};
+const FLOOR_PAL = { '.':'tar', ',':'fog', ' ':'wood', 'o':'wood' };
+
+/* ── ASCII sprite art. Space = transparent. ────────────────────────────── */
+const ART = {
+  tree: ["    ^    ","   ^^^   ","  ^Y^Y^  "," ^^^T^^^ ","^Y^^^^^Y^"," ^^^T^^^ ","  ^Y^Y^  ","   ^^^   ","    |    ","    |    ","   /|\\   ","  _/ \\_  "],
+  person: ["  ___  "," (o o) ","  \\_/  "," /|=|\\ ","  | |  ","  | |  "," _/ \\_ "],
+  car: ["    _______    ","  _/       \\_  "," |  []   []  | ","_|___________|_"," (_)       (_) "],
+  phantom: ["  .-'''-.  "," /  o o  \\ ","|    ^    |","|  '---'  |"," \\  ~~~  / ","  ) ( ) (  "," ~  ~  ~  ~"],
+  clerk: ["  ,---.  "," ( -.- ) ","  '---'  "," /|###|\\ ","  |   |  ","  |   |  "," _|   |_ "],
+  barrel: [" _____ ","|:::::|","|:::::|","|:::::|","|_____|"],
+};
+const SPRITE_PAL = { tree:'wood', person:'fog', car:'steel', phantom:'glass', clerk:'sod', barrel:'steel' };
+
+/* ── Precomputation. Everything the per-cell loop needs is flattened into
+   typed arrays up front, so the render path does no string or object work. ── */
+const COLORS = [], PAL_BASE = {};
+for (const n in PAL) { PAL_BASE[n] = COLORS.length; for (const c of PAL[n]) COLORS.push(c); }
+
+function packTex(rows) {
+  const a = new Float32Array(64);
+  for (let v = 0; v < 8; v++) for (let u = 0; u < 8; u++)
+    a[v * 8 + u] = (rows[v].charCodeAt(u) - 48) / 9;
+  return a;
+}
+const TEX_BY_CODE = new Array(128).fill(null), PALB_BY_CODE = new Uint8Array(128);
+for (const k in TEX) { const c = k.charCodeAt(0); TEX_BY_CODE[c] = packTex(TEX[k]); PALB_BY_CODE[c] = PAL_BASE[MAT[k]]; }
+const FTEX_BY_CODE = new Array(128).fill(null), FPALB_BY_CODE = new Uint8Array(128);
+for (const k in FLOOR_TEX) { const c = k.charCodeAt(0); FTEX_BY_CODE[c] = packTex(FLOOR_TEX[k]); FPALB_BY_CODE[c] = PAL_BASE[FLOOR_PAL[k]]; }
+
+/* Brightness 0..1 → glyph code / palette step, via 256-entry tables. */
+const LIT2CODE = new Uint8Array(256), LIT2SHADE = new Uint8Array(256);
+for (let i = 0; i < 256; i++) {
+  const t = i / 255;
+  LIT2CODE[i] = RAMP.charCodeAt(Math.round(t * (RAMP.length - 1)));
+  LIT2SHADE[i] = Math.round(t * 7);
+}
+function lidx(t) { return t <= 0 ? 0 : t >= 1 ? 255 : (t * 255) | 0; }
+
+/* Sectors get a flat cell/solid/floor representation alongside the char grid. */
+function packSector(s) {
+  s.H = s.grid.length; s.W = s.grid[0].length;
+  const n = s.W * s.H;
+  s.cells = new Uint8Array(n); s.solidMask = new Uint8Array(n); s.floorCells = new Uint8Array(n);
+  for (let y = 0; y < s.H; y++) for (let x = 0; x < s.W; x++) {
+    const ch = s.grid[y][x], i = y * s.W + x;
+    s.cells[i] = ch.charCodeAt(0);
+    s.solidMask[i] = SOLID.includes(ch) ? 1 : 0;
+    const f = s.floors[y][x];
+    s.floorCells[i] = (FLOOR_TEX[f] ? f : (s.outdoor ? ' ' : 'o')).charCodeAt(0);
+  }
+}
+function solidAt(sec, x, y) {
+  return (x < 0 || y < 0 || x >= sec.W || y >= sec.H) ? 1 : sec.solidMask[y * sec.W + x];
+}
+
+/* ═══ World generation ═══════════════════════════════════════════════════
+   Sectors are grids. Building interiors are separate sectors reached through
+   door tiles, which gives you a natural level break and a loading beat. */
+
+function blankGrid(w, h, fill) {
+  const g = [];
+  for (let y = 0; y < h; y++) g.push(new Array(w).fill(fill));
+  return g;
+}
+function rect(g, x0, y0, x1, y1, ch) {
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++)
+    if (g[y] && g[y][x] !== undefined) g[y][x] = ch;
+}
+function box(g, x0, y0, x1, y1, ch) {
+  for (let x = x0; x <= x1; x++) { g[y0][x] = ch; g[y1][x] = ch; }
+  for (let y = y0; y <= y1; y++) { g[y][x0] = ch; g[y][x1] = ch; }
+}
+
+function buildStreet() {
+  const W = 56, H = 46;
+  const g = blankGrid(W, H, ' ');
+  box(g, 0, 0, W - 1, H - 1, '#');                     // fog wall — the Act II lockdown
+
+  rect(g, 25, 1, 30, H - 2, '.');                       // main drag, north–south
+  rect(g, 1, 20, W - 2, 25, '.');                       // cross street, east–west
+  rect(g, 23, 1, 24, H - 2, ','); rect(g, 31, 1, 32, H - 2, ',');
+  rect(g, 1, 18, W - 2, 19, ','); rect(g, 1, 26, W - 2, 27, ',');
+
+  // Storefronts, west side
+  box(g, 6, 6, 20, 16, 'W'); rect(g, 8, 6, 11, 6, 'G'); rect(g, 15, 6, 18, 6, 'G');
+  g[16][13] = DOOR;                                     // → pawnshop
+  box(g, 6, 30, 19, 40, '#'); rect(g, 6, 33, 6, 37, 'G');
+  g[30][12] = DOOR;                                     // → motel
+
+  // East side
+  box(g, 36, 5, 50, 15, '#'); rect(g, 36, 8, 36, 12, 'G');
+  g[15][43] = DOOR;                                     // → dive bar
+  box(g, 36, 31, 51, 42, 'W'); rect(g, 38, 31, 41, 31, 'G');
+  g[31][45] = DOOR;                                     // → mill office
+
+  // Alley detail + a hidden terminal behind the pawnshop
+  rect(g, 21, 10, 22, 12, ' ');
+  g[11][21] = TERMINAL;
+
+  const floors = g.map(r => r.slice());
+  return {
+    id: 'street', name: 'Main Street', grid: g, floors, outdoor: true,
+    sky: 'fog', rain: 0.85, ambient: 0.0,
+    spawn: { x: 27.5, y: 41.0, a: -Math.PI / 2 },
+    doors: {
+      '13,16': { to: 'pawn',  x: 9.5,  y: 8.5,  a: -Math.PI / 2 },
+      '12,30': { to: 'motel', x: 10.0, y: 3.0,  a:  Math.PI / 2 },
+      '43,15': { to: 'bar',   x: 9.5,  y: 9.5,  a: -Math.PI / 2 },
+      '45,31': { to: 'mill',  x: 14.0, y: 3.0,  a:  Math.PI / 2 },
+    },
+    entities: [
+      { art:'tree', x:3.5,  y:10.5, r:0.5, kind:'prop', h:2.6 },
+      { art:'tree', x:3.5,  y:34.5, r:0.5, kind:'prop', h:2.6 },
+      { art:'tree', x:52.5, y:22.5, r:0.5, kind:'prop', h:2.6 },
+      { art:'tree', x:34.5, y:44.0, r:0.5, kind:'prop', h:2.6 },
+      { art:'barrel', x:22.0, y:29.0, r:0.35, kind:'prop', h:0.9 },
+      { art:'barrel', x:33.5, y:17.0, r:0.35, kind:'prop', h:0.9 },
+      { art:'car', kind:'car', x:27.0, y:44.0, r:0.62, h:1.1,
+        route:[[27,44],[27,22.5],[6,22.5],[6,22.5],[27,22.5],[27,44]], node:0, speed:2.4 },
+      { art:'car', kind:'car', x:29.0, y:4.0, r:0.62, h:1.1,
+        route:[[29,4],[29,23.5],[50,23.5],[50,23.5],[29,23.5],[29,4]], node:0, speed:1.9 },
+      { art:'person', kind:'walker', x:23.5, y:35.0, r:0.28, h:1.7, speed:0.7 },
+      { art:'person', kind:'walker', x:32.5, y:12.0, r:0.28, h:1.7, speed:0.55 },
+      { art:'person', kind:'walker', x:15.0, y:26.5, r:0.28, h:1.7, speed:0.8 },
+    ],
+  };
+}
+
+function buildRoom(id, name, W, H, opts) {
+  const g = blankGrid(W, H, 'o');
+  box(g, 0, 0, W - 1, H - 1, opts.wall || '#');
+  const floors = g.map(r => r.slice());
+  return Object.assign({
+    id, name, grid: g, floors, outdoor: false,
+    sky: 'wood', rain: 0, ambient: 0.22, doors: {}, entities: [],
+  }, opts, { grid: g, floors });
+}
+
+function buildMotel() {
+  const s = buildRoom('motel', 'Motel — front office', 20, 15, { wall: 'W', ambient: 0.3 });
+  const g = s.grid;
+  rect(g, 4, 6, 15, 6, 'W'); rect(g, 8, 6, 10, 6, 'o');   // counter with a gap
+  g[14][10] = DOOR;
+  s.doors['10,14'] = { to: 'street', x: 12.0, y: 31.5, a: Math.PI / 2 };
+  s.spawn = { x: 10.0, y: 12.0, a: -Math.PI / 2 };
+  s.entities = [
+    { art:'clerk', kind:'npc', x:9.5, y:4.0, r:0.35, h:1.7, dialogue:'marla', name:'Marla' },
+  ];
+  s.floors = g.map(r => r.slice());
+  return s;
+}
+
+function buildMill() {
+  const s = buildRoom('mill', 'Oakhaven Mill & Timber', 28, 22, { wall: '=', ambient: 0.06 });
+  const g = s.grid;
+  rect(g, 6, 6, 7, 15, '='); rect(g, 12, 6, 13, 15, '='); rect(g, 18, 6, 19, 15, '=');
+  rect(g, 6, 10, 7, 11, 'o'); rect(g, 12, 10, 13, 11, 'o'); rect(g, 18, 10, 19, 11, 'o');
+  g[21][14] = DOOR;
+  g[6][24] = TERMINAL;
+  s.doors['14,21'] = { to: 'street', x: 45.5, y: 32.5, a: Math.PI / 2 };
+  s.spawn = { x: 14.0, y: 19.0, a: -Math.PI / 2 };
+  s.entities = [
+    { art:'barrel', x:22.5, y:17.5, r:0.35, kind:'prop', h:0.9 },
+    { art:'barrel', x:23.5, y:16.5, r:0.35, kind:'prop', h:0.9 },
+    { art:'phantom', kind:'npc', x:14.0, y:8.0, r:0.4, h:2.0, dialogue:'phantom',
+      name:'Something in the sawdust', hover:true },
+  ];
+  s.floors = g.map(r => r.slice());
+  return s;
+}
+
+function buildPawn() {
+  const s = buildRoom('pawn', 'Pawnshop — closed', 16, 12, { wall: 'W', ambient: 0.16 });
+  const g = s.grid;
+  rect(g, 3, 7, 12, 7, 'W'); g[7][7] = 'o';
+  g[11][8] = DOOR;
+  g[3][14] = TERMINAL;
+  s.doors['8,11'] = { to: 'street', x: 13.5, y: 17.7, a: Math.PI / 2 };
+  s.spawn = { x: 8.0, y: 9.5, a: -Math.PI / 2 };
+  s.entities = [{ art:'barrel', x:4.5, y:4.5, r:0.35, kind:'prop', h:0.9 }];
+  s.floors = g.map(r => r.slice());
+  return s;
+}
+
+function buildBar() {
+  const s = buildRoom('bar', 'The Knot & Nail', 18, 14, { wall: '#', ambient: 0.26 });
+  const g = s.grid;
+  rect(g, 3, 4, 14, 4, '#'); g[4][6] = 'o';
+  g[13][9] = DOOR;
+  s.doors['9,13'] = { to: 'street', x: 44.0, y: 16.5, a: Math.PI / 2 };
+  s.spawn = { x: 9.0, y: 11.0, a: -Math.PI / 2 };
+  s.entities = [
+    { art:'person', kind:'npc', x:11.5, y:6.5, r:0.35, h:1.7, dialogue:'drinker', name:'A regular' },
+    { art:'barrel', x:15.5, y:11.5, r:0.35, kind:'prop', h:0.9 },
+  ];
+  s.floors = g.map(r => r.slice());
+  return s;
+}
+
+const SECTORS = {};
+[buildStreet(), buildMotel(), buildMill(), buildPawn(), buildBar()]
+  .forEach(s => { packSector(s); SECTORS[s.id] = s; });
+
+/* ═══ Dialogue graph ═══════════════════════════════════════════════════════
+   Conditions and effects are declarative data, never eval'd — the same schema
+   the Python backend uses, so content authored for one runs on the other. */
+
+const DIALOGUE = {
+  marla: {
+    start: 'm0',
+    nodes: {
+      m0: { speaker:'Marla — night clerk', text:
+        "You're not from the bank and you're not from the state, so I'm going to guess press. Third lot this month.\n\nCheckout's eleven. Ice machine's been broke since the mill closed, which tells you about how long that's been.",
+        choices:[
+          { text:"We're looking into the deaths. Six men in five weeks.", next:'m1' },
+          { text:"Just a room. And whatever's behind the counter.", next:'m_drink' },
+          { text:"What happened to this town, Marla?", next:'m_town', effects:{ align:{humanism:1} } },
+        ]},
+      m1: { speaker:'Marla — night clerk', text:
+        "Deaths. That's a polite word for it.\n\nThey were mill men. Every one of them worked the green chain. They got told the plant was losing money and they believed it, because what else do you do. Then the severance ran out.",
+        choices:[
+          { text:"You think it's just despair.", next:'m2', effects:{ align:{humanism:1}, flags:{marla_open:true} } },
+          { text:"Six men, same method, same week of the month. That's not despair. That's a pattern.", next:'m2b', effects:{ align:{nihilism:1}, flags:{marla_open:true} } },
+        ]},
+      m2: { speaker:'Marla — night clerk', text:
+        "I think a man can be killed slow and the paperwork still says he did it himself.\n\nBut no. Not just. Ray Hollis was the happiest of them. Bought a boat in March. In April he wouldn't cross the lot after dark, said the streetlights were watching him wrong.",
+        choices:[
+          { text:"Wrong how?", next:'m3' },
+        ]},
+      m2b: { speaker:'Marla — night clerk', text:
+        "You've got a cop's mouth on you.\n\nFine. Pattern. They all went quiet the same way first. Stopped answering. Ray Hollis stopped crossing the lot after dark — said the streetlights were watching him wrong.",
+        choices:[
+          { text:"Wrong how?", next:'m3' },
+        ]},
+      m3: { speaker:'Marla — night clerk', text:
+        "Said they'd hum when he was sad and go dark when he wasn't. Said the whole town got heavier around three in the morning, like something leaned on it.\n\nI laughed at him. He's in the ground now and I still hear the hum some nights.",
+        choices:[
+          { text:"Who bought the mill?", next:'m4' },
+          { text:"You should leave. Tonight, if you can.", next:'m_leave', effects:{ align:{humanism:2}, meters:{stress:-4} } },
+        ]},
+      m4: { speaker:'Marla — night clerk', text:
+        "Crossroads Holdings. Out of Delaware, address is a mailbox. They bought it profitable and ran it into the dirt inside eleven months. Took the machines, left the asbestos.\n\nNobody's ever seen a single employee.",
+        choices:[
+          { text:"Where's the mill office?", next:'m5', effects:{ flags:{mill_lead:true} } },
+        ]},
+      m5: { speaker:'Marla — night clerk', text:
+        "East end, past the cross street. Door's chained but the chain's been cut since February — kids, probably.\n\nDon't go at three.",
+        choices:[ { text:"Thanks, Marla.", next:null } ]},
+      m_town: { speaker:'Marla — night clerk', text:
+        "Same thing that happened to every town like it. Somebody in a building I'll never see decided we cost more than we made.\n\nThe rest is just weather.",
+        choices:[
+          { text:"That's not weather. That's a decision somebody signed.", next:'m1', effects:{ align:{humanism:1} } },
+          { text:"Six men are dead. I need the specifics, not the eulogy.", next:'m1', effects:{ align:{nihilism:1}, meters:{stress:3} } },
+        ]},
+      m_drink: { speaker:'Marla — night clerk', text:
+        "There's a fifth of rye under here older than you are. Costs eight dollars and it'll take the edge off tonight and put two more on tomorrow.\n\nYour call, honey.",
+        choices:[
+          { text:"[Drink.] Take the edge off.", next:'m_drank',
+            effects:{ meters:{stress:-22}, flags:{sober:false}, counters:{drinks:1} } },
+          { text:"[Refuse.] Not tonight.", next:'m_refused',
+            effects:{ meters:{stress:6}, counters:{refusals:1} } },
+        ]},
+      m_drank: { speaker:'Marla — night clerk', text:
+        "There he is.\n\nThe shake goes out of your hands and the town goes soft at the corners. It's the first quiet you've had in four states.\n\nSomething in the back of your skull files it away as a solution.",
+        choices:[ { text:"...", next:'m0' } ]},
+      m_refused: { speaker:'Marla — night clerk', text:
+        "Suit yourself. Most men in here don't have that in them.\n\nYour hands don't stop. The hum in the lot gets a half-step louder, and you notice you can hear it at all.",
+        choices:[ { text:"...", next:'m0' } ]},
+      m_leave: { speaker:'Marla — night clerk', text:
+        "With what car, honey? With what money?\n\nBut — thank you. Nobody's said a thing like that to me in about two years.",
+        choices:[ { text:"Who bought the mill?", next:'m4' } ]},
+    }
+  },
+  phantom: {
+    start: 'p0',
+    nodes: {
+      p0: { speaker:'The shape on the green chain', text:
+        "It is a man made of sawdust and standing oil. Where its lungs were, the ASCII will not hold still.\n\n\"QUOTA,\" it says, and the word arrives inside your teeth rather than through the air. \"QUOTA. QUOTA. THE VENT WAS ON THE FORM.\"",
+        choices:[
+          { text:"[Salt and iron.] Put it down. It's already dead.", next:'p_burn', effects:{ align:{nihilism:2}, meters:{stress:9} } },
+          { text:"[Latin.] Try to let it finish the sentence first.", next:'p_talk',
+            effects:{ align:{humanism:2} } },
+          { text:"Which vent? Say the number.", next:'p_talk', effects:{ align:{humanism:1} } },
+        ]},
+      p_burn: { speaker:'—', text:
+        "Rock salt takes it across the chest and it comes apart like a struck bag of flour.\n\nIt does not scream. It says \"THANK\" and the second word is eaten by a seam in the air that should not be there — a tear, thin as a paper cut, that closes with a wet sound.\n\nSomething ate your ghost. That's new.",
+        choices:[ { text:"[Note the tear.]", next:null, effects:{ flags:{saw_tear:true} } } ]},
+      p_talk: { speaker:'The shape on the green chain', text:
+        "It stops. The oil on it goes still.\n\n\"FOURTEEN,\" it says. \"VENT FOURTEEN. I FILED IT IN MARCH. I FILED IT IN MARCH. THEY SAID IT WAS CAPITAL EXPENDITURE.\"\n\nIt looks at its own hands like it's checking whether they're still on the form.",
+        choices:[
+          { text:"They killed you with a spreadsheet. I know. Go.", next:'p_rest',
+            effects:{ align:{humanism:2}, meters:{stress:-6}, flags:{phantom_freed:true} } },
+        ]},
+      p_rest: { speaker:'—', text:
+        "It goes out like a pilot light — no violence in it at all.\n\nAnd then the empty air where it stood puckers. A seam opens, thin as a paper cut, and drinks the last of it before closing with a wet sound.\n\nSomething is eating the dead here. Salting the bones was never going to be enough.",
+        choices:[ { text:"[Note the tear.]", next:null, effects:{ flags:{saw_tear:true} } } ]},
+    }
+  },
+  drinker: {
+    start: 'd0',
+    nodes: {
+      d0: { speaker:'A regular', text:
+        "He doesn't look up. There are four empties in front of him and it isn't seven o'clock.\n\n\"If you're here about the mill, I got nothing. If you're here about Ray, I got less.\"",
+        choices:[
+          { text:"I'm here about the hum.", next:'d1' },
+          { text:"[Leave him alone.]", next:null, effects:{ align:{humanism:1} } },
+        ]},
+      d1: { speaker:'A regular', text:
+        "Now he looks up.\n\n\"Everybody hears it and nobody says it, and you walk in off the highway and say it first thing.\"\n\nHe pushes a beer mat across the bar. Someone has written on it in ballpoint, over and over, in a hand that got worse as it went:\n\n  while town.mood < 0.2: yield\n\n\"Found forty of these behind the dart board. Ray's writing. Ray couldn't type.\"",
+        choices:[
+          { text:"[Take the beer mat.]", next:null, effects:{ frag:1, flags:{frag_mat:true} } },
+        ]},
+    }
+  },
+};
+
+/* ═══ Game state ═════════════════════════════════════════════════════════ */
+const S = {
+  sector: null, px: 0, py: 0, dirX: 0, dirY: 0, planeX: 0, planeY: 0,
+  vx: 0, vy: 0, angle: 0, pitch: 0, posZ: 0, bob: 0,
+  stress: 34, sobriety: 100, nihilism: 0, humanism: 0, frags: 0,
+  flags: {}, counters: { drinks: 0, refusals: 0 },
+  glitch: 0, running: false, time: 0, transition: 0, pendingDoor: null,
+  fragsFound: {},
+};
+
+/* ═══ Renderer ═══════════════════════════════════════════════════════════ */
+const canvas = document.getElementById('screen');
+const ctx = canvas.getContext('2d', { alpha: false });
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = COLS * CELL_W * DPR;
+canvas.height = ROWS * CELL_H * DPR;
+canvas.style.aspectRatio = `${COLS * CELL_W} / ${ROWS * CELL_H}`;
+ctx.scale(DPR, DPR);
+
+/* Glyph atlas — every (char, colour) pair is rasterised once, then blitted.
+   Cheaper than fillText per cell and it keeps the grid pixel-aligned. */
+const PAL_STRIDE = 96;
+const glyphArr = new Array(128 * PAL_STRIDE).fill(null);
+let glyphFont = `${CELL_H - 2}px ${getComputedStyle(document.body).fontFamily}`;
+function glyph(code, ci) {
+  const key = code * PAL_STRIDE + ci;
+  let c = glyphArr[key];
+  if (c) return c;
+  c = document.createElement('canvas');
+  c.width = CELL_W * DPR; c.height = CELL_H * DPR;
+  const g = c.getContext('2d');
+  g.scale(DPR, DPR);
+  g.font = glyphFont;
+  g.textBaseline = 'top'; g.fillStyle = COLORS[ci] || '#000';
+  g.fillText(String.fromCharCode(code), 0, 0);
+  glyphArr[key] = c;
+  return c;
+}
+
+const bufChar = new Uint8Array(COLS * ROWS);
+const bufCol  = new Uint8Array(COLS * ROWS);
+const zBuf    = new Float32Array(COLS);
+const rowDist = new Float32Array(ROWS);
+const skyLit  = new Float32Array(ROWS);
+
+function put(x, y, code, ci) {
+  if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return;
+  const i = y * COLS + x;
+  bufChar[i] = code; bufCol[i] = ci;
+}
+function hash2(x, y) {
+  let h = (x * 374761393 + y * 668265263) | 0;
+  h = (h ^ (h >> 13)) * 1274126177 | 0;
+  return ((h ^ (h >> 16)) >>> 0) / 4294967295;
+}
+
+function tileAt(sec, x, y) {
+  const r = sec.grid[y];
+  if (!r) return '#';
+  const t = r[x];
+  return t === undefined ? '#' : t;
+}
+
+/* ── Rain, in screen space, drawn over the world ───────────────────────── */
+const rain = [];
+for (let i = 0; i < 220; i++)
+  rain.push({ x: Math.random() * COLS, y: Math.random() * ROWS, s: 26 + Math.random() * 34, l: 1 + (Math.random() * 3 | 0) });
+
+const colNoise = new Float32Array(COLS);
+for (let i = 0; i < COLS; i++) colNoise[i] = hash2(i, 17);
+
+function renderWorld(dt) {
+  const sec = S.sector;
+  const horizon = ROWS / 2 + S.pitch;
+  const SW = sec.W, SH = sec.H, cells = sec.cells, mask = sec.solidMask, fcells = sec.floorCells;
+  const amb = sec.ambient, outdoor = sec.outdoor;
+  const halfR = 0.5 * ROWS;
+  const skyBase = PAL_BASE[sec.sky] || PAL_BASE.fog;
+  const woodBase = PAL_BASE.wood, tarBase = PAL_BASE.tar;
+
+  /* Row-dependent terms don't vary by column — hoist them out of the ray loop. */
+  for (let y = 0; y < ROWS; y++) {
+    const d = y - horizon;
+    rowDist[y] = halfR / (d === 0 ? 0.0001 : (d < 0 ? -d : d));
+    skyLit[y] = 0.10 + (y / ROWS) * 0.10;
+  }
+
+  const px = S.px, py = S.py;
+  const fpx = Math.floor(px), fpy = Math.floor(py);
+
+  for (let x = 0; x < COLS; x++) {
+    const cam = 2 * x / COLS - 1;
+    const rdx = S.dirX + S.planeX * cam || 1e-9;
+    const rdy = S.dirY + S.planeY * cam || 1e-9;
+
+    /* — DDA — */
+    let mx = fpx, my = fpy;
+    const ddx = rdx < 0 ? -1 / rdx : 1 / rdx;
+    const ddy = rdy < 0 ? -1 / rdy : 1 / rdy;
+    let sdx, sdy, stx, sty;
+    if (rdx < 0) { stx = -1; sdx = (px - mx) * ddx; } else { stx = 1; sdx = (mx + 1 - px) * ddx; }
+    if (rdy < 0) { sty = -1; sdy = (py - my) * ddy; } else { sty = 1; sdy = (my + 1 - py) * ddy; }
+
+    let side = 0, code = 35, guard = 0;
+    while (guard++ < 160) {
+      if (sdx < sdy) { sdx += ddx; mx += stx; side = 0; }
+      else           { sdy += ddy; my += sty; side = 1; }
+      if (mx < 0 || my < 0 || mx >= SW || my >= SH) { code = 35; break; }
+      const ci = my * SW + mx;
+      if (mask[ci]) { code = cells[ci]; break; }
+    }
+    let dist = side === 0 ? sdx - ddx : sdy - ddy;
+    if (dist < 0.05) dist = 0.05;
+    zBuf[x] = dist;
+
+    /* Where on the wall face the ray landed — this is the texture U axis. */
+    let wallX = side === 0 ? py + dist * rdy : px + dist * rdx;
+    wallX -= Math.floor(wallX);
+
+    const lineH = ROWS / dist;
+    const zoff = S.posZ / dist;
+    const drawStart = (-lineH * 0.5 + horizon + zoff) | 0;
+    const drawEnd = (lineH * 0.5 + horizon + zoff) | 0;
+
+    const tex = TEX_BY_CODE[code] || TEX_BY_CODE[35];
+    const palB = PALB_BY_CODE[code];
+    let texU = (wallX * 8) | 0; if (texU > 7) texU = 7;
+    let fog = 1 - dist / VIEW_DIST; if (fog < 0) fog = 0;
+    fog *= fog;                                        // quadratic falloff reads as haze
+    if (side === 1) fog *= 0.66;                       // cheap face shading
+    const emissive = (code === 84 || code === 70);     // 'T' terminal, 'F' living wall
+
+    /* — ceiling / sky — */
+    const cTop = drawStart < ROWS ? drawStart : ROWS;
+    let idx = x;
+    for (let y = 0; y < cTop; y++, idx += COLS) {
+      let v, cb;
+      if (outdoor) {
+        v = skyLit[y] + colNoise[(x + y) % COLS] * 0.06;
+        cb = skyBase;
+      } else {
+        const rd = rowDist[y];
+        v = (1 - rd / (VIEW_DIST * 0.55)) * 0.55 + amb;
+        if (v < 0) v = 0;
+        cb = woodBase;
+      }
+      const li = lidx(v);
+      bufChar[idx] = LIT2CODE[li]; bufCol[idx] = cb + LIT2SHADE[li];
+    }
+
+    /* — wall — */
+    const y0 = drawStart < 0 ? 0 : drawStart;
+    const y1 = drawEnd > ROWS - 1 ? ROWS - 1 : drawEnd;
+    const invLineH = 8 / lineH;
+    idx = y0 * COLS + x;
+    for (let y = y0; y <= y1; y++, idx += COLS) {
+      let texV = ((y - drawStart) * invLineH) | 0;
+      if (texV > 7) texV = 7; else if (texV < 0) texV = 0;
+      const base = tex[texV * 8 + texU];
+      let lit = emissive ? base * (0.55 + 0.45 * (fog > 0.25 ? fog : 0.25))
+                         : base * fog + amb * base;
+      const li = lidx(lit);
+      bufChar[idx] = LIT2CODE[li]; bufCol[idx] = palB + LIT2SHADE[li];
+    }
+
+    /* — floor casting: roads and sidewalks are real sampled surfaces — */
+    const fStart = drawEnd + 1 > 0 ? drawEnd + 1 : 0;
+    idx = fStart * COLS + x;
+    for (let y = fStart; y < ROWS; y++, idx += COLS) {
+      if (y <= horizon) continue;
+      const rd = rowDist[y];
+      const fx = px + rd * rdx, fy = py + rd * rdy;
+      const cx = Math.floor(fx), cy = Math.floor(fy);
+      let fcode = (cx < 0 || cy < 0 || cx >= SW || cy >= SH) ? (outdoor ? 32 : 111)
+                                                            : fcells[cy * SW + cx];
+      const ftex = FTEX_BY_CODE[fcode] || FTEX_BY_CODE[32];
+      let u = ((fx - cx) * 8) | 0; if (u > 7) u = 7;
+      let v = ((fy - cy) * 8) | 0; if (v > 7) v = 7;
+      let base = ftex[v * 8 + u];
+      /* centre line down the main drag */
+      if (fcode === 46 && fx > 27.78 && fx < 28.02 && (cy % 3) !== 0) base = 0.95;
+      let ffog = 1 - rd / (VIEW_DIST * 0.8); if (ffog < 0) ffog = 0;
+      ffog *= ffog;
+      const li = lidx(base * ffog + amb * base * 0.6);
+      bufChar[idx] = LIT2CODE[li];
+      bufCol[idx] = (FPALB_BY_CODE[fcode] || tarBase) + LIT2SHADE[li];
+    }
+  }
+
+  /* — sprites, far to near, clipped by the z-buffer — */
+  const ents = sec.entities.slice().sort((a, b) => {
+    const da = (a.x - S.px) ** 2 + (a.y - S.py) ** 2;
+    const db = (b.x - S.px) ** 2 + (b.y - S.py) ** 2;
+    return db - da;
+  });
+  for (const e of ents) drawSprite(e, sec, horizon);
+
+  /* — rain over everything — */
+  if (sec.rain > 0) {
+    for (const d of rain) {
+      d.y += d.s * dt;
+      d.x -= 6 * dt;
+      if (d.y > ROWS) { d.y = -2; d.x = Math.random() * COLS; }
+      if (d.x < 0) d.x += COLS;
+      const rx = d.x | 0;
+      for (let k = 0; k < d.l; k++) {
+        const ry = (d.y | 0) + k;
+        if (ry < 0 || ry >= ROWS) continue;
+        put(rx, ry, k === d.l - 1 ? 39 : 47, PAL_BASE.fog + 4 + (k % 2));
+      }
+    }
+  }
+}
+
+function drawSprite(e, sec, horizon) {
+  const art = ART[e.art]; if (!art) return;
+  const aw = art[0].length, ah = art.length;
+
+  const sx = e.x - S.px, sy = e.y - S.py;
+  const inv = 1 / (S.planeX * S.dirY - S.dirX * S.planeY);
+  const tx = inv * (S.dirY * sx - S.dirX * sy);
+  const ty = inv * (-S.planeY * sx + S.planeX * sy);
+  if (ty <= 0.15) return;
+
+  const screenX = Math.floor((COLS / 2) * (1 + tx / ty));
+  const hgt = Math.abs(Math.floor(ROWS / ty)) * (e.h || 1.7) / 1.7;
+  const wid = Math.floor(hgt * (aw / ah) * 0.55);
+
+  const vShift = (e.hover ? Math.sin(S.time * 1.6) * 0.12 : 0);
+  const ground = Math.floor(horizon + (ROWS / ty) / 2 + S.posZ / ty) + Math.floor(vShift * hgt);
+  const top = ground - hgt;
+
+  let fog = Math.max(0, 1 - ty / VIEW_DIST); fog *= fog;
+  const palB = PAL_BASE[SPRITE_PAL[e.art] || 'fog'];
+  const ci = palB + LIT2SHADE[lidx(Math.min(1, 0.35 + fog * 0.75 + sec.ambient))];
+
+  for (let i = 0; i < wid; i++) {
+    const x = screenX - (wid >> 1) + i;
+    if (x < 0 || x >= COLS) continue;
+    if (ty >= zBuf[x]) continue;                       // occluded by wall
+    const u = Math.min(aw - 1, Math.floor(i * aw / wid));
+    for (let j = 0; j < hgt; j++) {
+      const y = top + j;
+      if (y < 0 || y >= ROWS) continue;
+      const v = Math.min(ah - 1, Math.floor(j * ah / hgt));
+      const code = art[v].charCodeAt(u);
+      if (!code || code === 32) continue;
+      const idx = y * COLS + x;
+      bufChar[idx] = code; bufCol[idx] = ci;
+    }
+  }
+}
+
+/* Post-pass. Stress and sector corruption both feed this — the same dial that
+   drives Act III geometry also drives what unmanaged stress looks like. */
+const GLITCH_CODES = new Uint8Array(
+  "!@#$%^&*<>?/\\|{}[]~".split('').map(c => c.charCodeAt(0)));
+const tearRowC = new Uint8Array(COLS), tearRowP = new Uint8Array(COLS);
+
+function postProcess() {
+  const g = S.glitch + Math.max(0, (S.stress - 68) / 32) * 0.5;
+  if (g <= 0.001) return;
+  const fleshCi = PAL_BASE.flesh + 6, fogCi = PAL_BASE.fog + 3;
+  const n = (g * COLS * ROWS * 0.05) | 0;
+  for (let i = 0; i < n; i++) {
+    const idx = (Math.random() * COLS * ROWS) | 0;
+    bufChar[idx] = GLITCH_CODES[(Math.random() * GLITCH_CODES.length) | 0];
+    bufCol[idx] = Math.random() < 0.14 ? fleshCi : fogCi;
+  }
+  if (g > 0.35) {                                       // horizontal row tearing
+    const rows = (g * 5) | 0;
+    for (let k = 0; k < rows; k++) {
+      const y = (Math.random() * ROWS) | 0, base = y * COLS;
+      const sh = ((Math.random() * 10) | 0) - 5;
+      tearRowC.set(bufChar.subarray(base, base + COLS));
+      tearRowP.set(bufCol.subarray(base, base + COLS));
+      for (let x = 0; x < COLS; x++) {
+        const s = (x + sh + COLS) % COLS;
+        bufChar[base + x] = tearRowC[s]; bufCol[base + x] = tearRowP[s];
+      }
+    }
+  }
+}
+
+function flush() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, COLS * CELL_W, ROWS * CELL_H);
+  let i = 0;
+  for (let y = 0; y < ROWS; y++) {
+    const py = y * CELL_H;
+    for (let x = 0; x < COLS; x++, i++) {
+      const code = bufChar[i];
+      if (code === 32 || code === 0) continue;
+      ctx.drawImage(glyph(code, bufCol[i]), x * CELL_W, py, CELL_W, CELL_H);
+    }
+  }
+}
+
+/* ═══ Physics ════════════════════════════════════════════════════════════
+   Circle vs grid, resolved one axis at a time so you slide along walls
+   instead of catching on corners. */
+const PLAYER_R = 0.26;
+function tryMove(sec, x, y, nx, ny, r) {
+  let ox = x, oy = y;
+  if (!collides(sec, nx, oy, r)) ox = nx;
+  if (!collides(sec, ox, ny, r)) oy = ny;
+  return [ox, oy];
+}
+function collides(sec, x, y, r) {
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const cx = Math.floor(x) + dx, cy = Math.floor(y) + dy;
+    if (!solidAt(sec, cx, cy)) continue;
+    const nx = Math.max(cx, Math.min(x, cx + 1));
+    const ny = Math.max(cy, Math.min(y, cy + 1));
+    if ((x - nx) ** 2 + (y - ny) ** 2 < r * r) return true;
+  }
+  return false;
+}
+
+const keys = {};
+addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)) e.preventDefault();
+  if (dlg.open) handleDialogueKey(e);
+  else if (e.code === 'KeyE') interact();
+});
+addEventListener('keyup', e => keys[e.code] = false);
+
+canvas.addEventListener('click', () => { if (S.running && !dlg.open) canvas.requestPointerLock(); });
+addEventListener('mousemove', e => {
+  if (document.pointerLockElement === canvas && !dlg.open) {
+    S.angle += e.movementX * 0.0022;
+    S.pitch = Math.max(-16, Math.min(16, S.pitch - e.movementY * 0.10));
+  }
+});
+
+function updatePlayer(dt) {
+  const sec = S.sector;
+  const sprint = keys.ShiftLeft || keys.ShiftRight;
+  const accel = (sprint ? 26 : 16);
+  const maxV  = (sprint ? 3.6 : 2.1) * (1 - Math.max(0, S.stress - 80) / 60);
+
+  if (keys.ArrowLeft)  S.angle -= 1.9 * dt;
+  if (keys.ArrowRight) S.angle += 1.9 * dt;
+
+  let ix = 0, iy = 0;
+  if (keys.KeyW) iy += 1;
+  if (keys.KeyS) iy -= 1;
+  if (keys.KeyD) ix += 1;
+  if (keys.KeyA) ix -= 1;
+  const len = Math.hypot(ix, iy) || 1;
+  ix /= len; iy /= len;
+
+  S.dirX = Math.cos(S.angle); S.dirY = Math.sin(S.angle);
+  S.planeX = -S.dirY * FOV_PLANE; S.planeY = S.dirX * FOV_PLANE;
+
+  S.vx += (S.dirX * iy + S.planeX / FOV_PLANE * ix) * accel * dt;
+  S.vy += (S.dirY * iy + S.planeY / FOV_PLANE * ix) * accel * dt;
+
+  const damp = Math.pow(0.0016, dt);                    // frame-rate independent friction
+  S.vx *= damp; S.vy *= damp;
+  const sp = Math.hypot(S.vx, S.vy);
+  if (sp > maxV) { S.vx = S.vx / sp * maxV; S.vy = S.vy / sp * maxV; }
+
+  const [nx, ny] = tryMove(sec, S.px, S.py, S.px + S.vx * dt, S.py + S.vy * dt, PLAYER_R);
+  if (nx === S.px) S.vx = 0;
+  if (ny === S.py) S.vy = 0;
+  S.px = nx; S.py = ny;
+
+  S.bob += sp * dt * 7;
+  S.posZ = Math.sin(S.bob) * sp * 1.1 + (keys.ControlLeft ? -6 : 0);
+
+  /* Stress drifts up outdoors in the rain and near the tear-sites. */
+  const target = sec.outdoor ? 46 : 30;
+  S.stress += ((S.stress < target ? 1 : -1) * 0.9 + (sec.id === 'mill' ? 2.4 : 0)) * dt;
+  S.stress = Math.max(0, Math.min(100, S.stress));
+}
+
+function updateEntities(dt) {
+  const sec = S.sector;
+  for (const e of sec.entities) {
+    if (e.kind === 'car') {
+      const [tx, ty] = e.route[e.node];
+      const dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy);
+      if (d < 0.35) { e.node = (e.node + 1) % e.route.length; continue; }
+      e.x += dx / d * e.speed * dt;
+      e.y += dy / d * e.speed * dt;
+      const pd = Math.hypot(e.x - S.px, e.y - S.py);
+      if (pd < e.r + PLAYER_R) {                         // clipped by a car
+        const k = 5.5 / Math.max(0.3, pd);
+        S.vx += (S.px - e.x) * k; S.vy += (S.py - e.y) * k;
+        S.stress = Math.min(100, S.stress + 14);
+        toast('You get clipped by the fender');
+      }
+    } else if (e.kind === 'walker') {
+      if (!e.tx || Math.hypot(e.tx - e.x, e.ty - e.y) < 0.4) {
+        e.tx = e.x + (Math.random() - 0.5) * 12;
+        e.ty = e.y + (Math.random() - 0.5) * 12;
+      }
+      const dx = e.tx - e.x, dy = e.ty - e.y, d = Math.hypot(dx, dy) || 1;
+      const nx2 = e.x + dx / d * e.speed * dt, ny2 = e.y + dy / d * e.speed * dt;
+      const [mx2, my2] = tryMove(sec, e.x, e.y, nx2, ny2, e.r);
+      if (mx2 === e.x && my2 === e.y) { e.tx = null; }
+      e.x = mx2; e.y = my2;
+    }
+  }
+}
+
+/* ═══ Interaction ════════════════════════════════════════════════════════ */
+function interact() {
+  const sec = S.sector;
+  /* nearest NPC in front of the player */
+  for (const e of sec.entities) {
+    if (e.kind !== 'npc') continue;
+    const dx = e.x - S.px, dy = e.y - S.py;
+    const d = Math.hypot(dx, dy);
+    if (d > 2.2) continue;
+    if ((dx / d) * S.dirX + (dy / d) * S.dirY < 0.55) continue;
+    openDialogue(e.dialogue);
+    return;
+  }
+  /* short probe for doors and terminals */
+  for (let t = 0.2; t < 1.9; t += 0.12) {
+    const cx = Math.floor(S.px + S.dirX * t), cy = Math.floor(S.py + S.dirY * t);
+    const tile = tileAt(sec, cx, cy);
+    if (tile === DOOR) {
+      const d = sec.doors[`${cx},${cy}`];
+      if (d) { S.transition = 0.85; S.pendingDoor = d; }
+      return;
+    }
+    if (tile === TERMINAL) {
+      const key = `${sec.id}:${cx},${cy}`;
+      if (S.fragsFound[key]) { toast('Nothing left on it'); return; }
+      S.fragsFound[key] = true; S.frags++;
+      openTerminal();
+      return;
+    }
+    if (SOLID.includes(tile)) return;
+  }
+}
+
+function enterSector(id, x, y, a) {
+  S.sector = SECTORS[id];
+  S.px = x; S.py = y; S.angle = a;
+  S.vx = S.vy = 0; S.pitch = 0;
+  document.querySelector('#gLoc span').textContent = S.sector.name;
+}
+
+/* ═══ Dialogue runtime ═══════════════════════════════════════════════════ */
+const dlg = { open: false, tree: null, node: null };
+const elDlg = document.getElementById('dialogue');
+const elSpk = document.getElementById('speaker');
+const elLine = document.getElementById('line');
+const elChoices = document.getElementById('choices');
+
+function meets(req) {
+  if (!req) return true;
+  if (req.flags) for (const k in req.flags) if (!!S.flags[k] !== req.flags[k]) return false;
+  if (req.fragsGte !== undefined && S.frags < req.fragsGte) return false;
+  if (req.sober && S.counters.drinks > 0) return false;
+  return true;
+}
+function applyEffects(fx) {
+  if (!fx) return;
+  if (fx.align) { S.nihilism += fx.align.nihilism || 0; S.humanism += fx.align.humanism || 0; }
+  if (fx.meters && fx.meters.stress !== undefined)
+    S.stress = Math.max(0, Math.min(100, S.stress + fx.meters.stress));
+  if (fx.flags) for (const k in fx.flags) S.flags[k] = fx.flags[k];
+  if (fx.counters) for (const k in fx.counters) S.counters[k] = (S.counters[k] || 0) + fx.counters[k];
+  if (fx.frag) S.frags += fx.frag;
+  if (fx.counters && fx.counters.drinks) S.sobriety = Math.max(0, S.sobriety - 25);
+}
+
+function openDialogue(id) {
+  const tree = DIALOGUE[id]; if (!tree) return;
+  dlg.open = true; dlg.tree = tree;
+  document.exitPointerLock?.();
+  elDlg.classList.add('on');
+  showNode(tree.start);
+}
+function showNode(nid) {
+  if (!nid) return closeDialogue();
+  const n = dlg.tree.nodes[nid]; if (!n) return closeDialogue();
+  dlg.node = n;
+  elSpk.textContent = n.speaker;
+  elLine.textContent = n.text;
+  elChoices.innerHTML = '';
+  const avail = n.choices.filter(c => meets(c.requires));
+  avail.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'choice'; b.dataset.k = `${i + 1}.`;
+    b.textContent = c.text;
+    if (c.effects?.align?.nihilism) { const s = document.createElement('span'); s.className = 'tag'; s.textContent = '  [hard]'; b.appendChild(s); }
+    if (c.effects?.align?.humanism) { const s = document.createElement('span'); s.className = 'tag h'; s.textContent = '  [open]'; b.appendChild(s); }
+    if (c.effects?.frag)            { const s = document.createElement('span'); s.className = 'tag p'; s.textContent = '  [?]'; b.appendChild(s); }
+    b.onclick = () => pick(c);
+    elChoices.appendChild(b);
+  });
+  dlg.avail = avail;
+  avail.length && elChoices.firstChild.focus();
+}
+function pick(c) { applyEffects(c.effects); showNode(c.next); }
+function handleDialogueKey(e) {
+  const i = ['Digit1','Digit2','Digit3','Digit4'].indexOf(e.code);
+  if (i >= 0 && dlg.avail && dlg.avail[i]) { e.preventDefault(); pick(dlg.avail[i]); }
+  if (e.code === 'Escape') closeDialogue();
+}
+function closeDialogue() { dlg.open = false; elDlg.classList.remove('on'); }
+
+/* ═══ Enochian terminals — the secret-ending collectibles ════════════════ */
+const FRAGMENTS = [
+`> cat /oakhaven/tick.py
+
+  for soul in town.residents:
+      soul.despair = clamp(soul.despair + AMBIENT, 0, 1)
+      if soul.despair > 0.94:
+          veil.thin(soul.position)
+          log("harvest", soul.id)
+
+> _`,
+`> tail -f render.log
+
+  WARN  entity 'whisperer' clipping through collision mesh
+  WARN  entity 'whisperer' clipping through collision mesh
+  WARN  asset 'human/hollis_r' deallocated mid-frame
+  INFO  admin session active: c.shurley
+  INFO  admin session active: c.shurley
+
+> _`,
+`> whoami
+
+  c.shurley
+
+> whoami --verify
+
+  ERROR: identity assertion failed
+  ERROR: 'c.shurley' is not root
+  ERROR: root has not logged in for 4,004,001 cycles
+
+> _`,
+];
+const elPrompt = document.getElementById('prompt');
+const elPromptText = document.getElementById('promptText');
+function openTerminal() {
+  elPromptText.textContent = FRAGMENTS[(S.frags - 1) % FRAGMENTS.length];
+  elPrompt.classList.add('on');
+  document.exitPointerLock?.();
+  toast(`Enochian fragment ${S.frags} recovered`);
+  const close = (e) => {
+    if (e.code === 'Escape' || e.code === 'KeyE' || e.code === 'Enter') {
+      elPrompt.classList.remove('on');
+      removeEventListener('keydown', close);
+    }
+  };
+  setTimeout(() => addEventListener('keydown', close), 120);
+}
+
+/* ═══ HUD ════════════════════════════════════════════════════════════════ */
+function bar(v, max, w) {
+  const n = Math.round((v / max) * w);
+  return '[' + '#'.repeat(Math.max(0, n)) + '-'.repeat(Math.max(0, w - n)) + ']';
+}
+const elToast = document.getElementById('toast');
+let toastT = 0;
+function toast(msg) { elToast.textContent = msg; elToast.classList.add('on'); toastT = 2.6; }
+
+function updateHUD(dt) {
+  const gs = document.getElementById('gStress');
+  gs.querySelector('span').textContent = bar(S.stress, 100, 18) + ' ' + Math.round(S.stress);
+  gs.className = 'gauge' + (S.stress > 84 ? ' crit' : S.stress > 62 ? ' warn' : '');
+
+  const gb = document.getElementById('gSober');
+  gb.querySelector('span').textContent = bar(S.sobriety, 100, 18) + (S.counters.drinks ? ' broken' : ' intact');
+  gb.className = 'gauge' + (S.sobriety < 100 ? ' crit' : '');
+
+  const tot = S.nihilism + S.humanism;
+  const el = document.getElementById('gAlign');
+  el.querySelector('span').textContent = tot === 0
+    ? 'undecided'
+    : `hard ${'#'.repeat(S.nihilism)}${'-'.repeat(Math.max(0,8-S.nihilism))} | open ${'#'.repeat(S.humanism)}${'-'.repeat(Math.max(0,8-S.humanism))}`;
+
+  const gf = document.getElementById('gFrag');
+  gf.querySelector('span').textContent = `${S.frags} / 12 recovered`;
+  gf.className = 'gauge' + (S.frags > 0 ? ' phos' : '');
+
+  if (toastT > 0) { toastT -= dt; if (toastT <= 0) elToast.classList.remove('on'); }
+}
+
+/* ═══ Main loop ══════════════════════════════════════════════════════════ */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now; S.time += dt;
+
+  if (S.running) {
+    if (S.transition > 0) {
+      S.transition -= dt;
+      if (S.transition <= 0.42 && S.pendingDoor) {
+        const d = S.pendingDoor; S.pendingDoor = null;
+        enterSector(d.to, d.x, d.y, d.a);
+      }
+    } else if (!dlg.open) {
+      updatePlayer(dt);
+      updateEntities(dt);
+    }
+    S.dirX = Math.cos(S.angle); S.dirY = Math.sin(S.angle);
+    S.planeX = -S.dirY * FOV_PLANE; S.planeY = S.dirX * FOV_PLANE;
+
+    renderWorld(dt);
+    if (S.transition > 0) {
+      /* door transition: dissolve to static rather than fade to black */
+      const amt = 1 - Math.abs(S.transition - 0.42) / 0.43;
+      for (let i = 0; i < COLS * ROWS * amt * 0.9; i++) {
+        const x = (Math.random() * COLS) | 0, y = (Math.random() * ROWS) | 0;
+        put(x, y, Math.random() < 0.5 ? 46 : 32, PAL_BASE.fog + 1);
+      }
+    }
+    postProcess();
+    flush();
+    updateHUD(dt);
+  }
+  requestAnimationFrame(frame);
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  document.getElementById('boot').classList.add('off');
+  const s = SECTORS.street;
+  enterSector('street', s.spawn.x, s.spawn.y, s.spawn.a);
+  S.running = true;
+  canvas.requestPointerLock?.();
+  toast('Oakhaven, Oregon — 2:40 AM');
+});
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

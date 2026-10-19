@@ -1,0 +1,1657 @@
+{
+  "characters": {
+    "dean_leather": {
+      "name": "Dean — leather jacket",
+      "sheet": "characters/dean_leather/dean_leather_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/dean_leather/portraits/dean_leather_portrait_steady_64x80.png",
+        "characters/dean_leather/portraits/dean_leather_portrait_grim_64x80.png",
+        "characters/dean_leather/portraits/dean_leather_portrait_hurt_64x80.png"
+      ]
+    },
+    "dean_fbi": {
+      "name": "Dean — FBI suit",
+      "sheet": "characters/dean_fbi/dean_fbi_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/dean_fbi/portraits/dean_fbi_portrait_steady_64x80.png",
+        "characters/dean_fbi/portraits/dean_fbi_portrait_grim_64x80.png",
+        "characters/dean_fbi/portraits/dean_fbi_portrait_hurt_64x80.png"
+      ]
+    },
+    "dean_coveralls": {
+      "name": "Dean — mechanic coveralls",
+      "sheet": "characters/dean_coveralls/dean_coveralls_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/dean_coveralls/portraits/dean_coveralls_portrait_steady_64x80.png",
+        "characters/dean_coveralls/portraits/dean_coveralls_portrait_grim_64x80.png",
+        "characters/dean_coveralls/portraits/dean_coveralls_portrait_hurt_64x80.png"
+      ]
+    },
+    "dean_duster": {
+      "name": "Dean — field trench",
+      "sheet": "characters/dean_duster/dean_duster_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/dean_duster/portraits/dean_duster_portrait_steady_64x80.png",
+        "characters/dean_duster/portraits/dean_duster_portrait_grim_64x80.png",
+        "characters/dean_duster/portraits/dean_duster_portrait_hurt_64x80.png"
+      ]
+    },
+    "sam_canvas": {
+      "name": "Sam — hooded jacket",
+      "sheet": "characters/sam_canvas/sam_canvas_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/sam_canvas/portraits/sam_canvas_portrait_steady_64x80.png",
+        "characters/sam_canvas/portraits/sam_canvas_portrait_grim_64x80.png",
+        "characters/sam_canvas/portraits/sam_canvas_portrait_hurt_64x80.png"
+      ]
+    },
+    "sam_fbi": {
+      "name": "Sam — FBI suit",
+      "sheet": "characters/sam_fbi/sam_fbi_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/sam_fbi/portraits/sam_fbi_portrait_steady_64x80.png",
+        "characters/sam_fbi/portraits/sam_fbi_portrait_grim_64x80.png",
+        "characters/sam_fbi/portraits/sam_fbi_portrait_hurt_64x80.png"
+      ]
+    },
+    "sam_rain": {
+      "name": "Sam — field raincoat",
+      "sheet": "characters/sam_rain/sam_rain_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/sam_rain/portraits/sam_rain_portrait_steady_64x80.png",
+        "characters/sam_rain/portraits/sam_rain_portrait_grim_64x80.png",
+        "characters/sam_rain/portraits/sam_rain_portrait_hurt_64x80.png"
+      ]
+    },
+    "sam_tweed": {
+      "name": "Sam — bunker tweed",
+      "sheet": "characters/sam_tweed/sam_tweed_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/sam_tweed/portraits/sam_tweed_portrait_steady_64x80.png",
+        "characters/sam_tweed/portraits/sam_tweed_portrait_grim_64x80.png",
+        "characters/sam_tweed/portraits/sam_tweed_portrait_hurt_64x80.png"
+      ]
+    },
+    "marla": {
+      "name": "Marla Ostrowski",
+      "sheet": "characters/marla/marla_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/marla/portraits/marla_portrait_steady_64x80.png",
+        "characters/marla/portraits/marla_portrait_grim_64x80.png",
+        "characters/marla/portraits/marla_portrait_hurt_64x80.png"
+      ]
+    },
+    "earl": {
+      "name": "Earl Duchesne",
+      "sheet": "characters/earl/earl_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/earl/portraits/earl_portrait_steady_64x80.png",
+        "characters/earl/portraits/earl_portrait_grim_64x80.png",
+        "characters/earl/portraits/earl_portrait_hurt_64x80.png"
+      ]
+    },
+    "worker": {
+      "name": "Mill worker",
+      "sheet": "characters/worker/worker_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/worker/portraits/worker_portrait_steady_64x80.png",
+        "characters/worker/portraits/worker_portrait_grim_64x80.png",
+        "characters/worker/portraits/worker_portrait_hurt_64x80.png"
+      ]
+    },
+    "rainwoman": {
+      "name": "Dolores",
+      "sheet": "characters/rainwoman/rainwoman_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/rainwoman/portraits/rainwoman_portrait_steady_64x80.png",
+        "characters/rainwoman/portraits/rainwoman_portrait_grim_64x80.png",
+        "characters/rainwoman/portraits/rainwoman_portrait_hurt_64x80.png"
+      ]
+    },
+    "teen": {
+      "name": "Tyler",
+      "sheet": "characters/teen/teen_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/teen/portraits/teen_portrait_steady_64x80.png",
+        "characters/teen/portraits/teen_portrait_grim_64x80.png",
+        "characters/teen/portraits/teen_portrait_hurt_64x80.png"
+      ]
+    },
+    "logger": {
+      "name": "Logger",
+      "sheet": "characters/logger/logger_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/logger/portraits/logger_portrait_steady_64x80.png",
+        "characters/logger/portraits/logger_portrait_grim_64x80.png",
+        "characters/logger/portraits/logger_portrait_hurt_64x80.png"
+      ]
+    },
+    "nurse": {
+      "name": "Night nurse",
+      "sheet": "characters/nurse/nurse_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/nurse/portraits/nurse_portrait_steady_64x80.png",
+        "characters/nurse/portraits/nurse_portrait_grim_64x80.png",
+        "characters/nurse/portraits/nurse_portrait_hurt_64x80.png"
+      ]
+    },
+    "delia": {
+      "name": "Delia Park",
+      "sheet": "characters/delia/delia_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/delia/portraits/delia_portrait_steady_64x80.png",
+        "characters/delia/portraits/delia_portrait_grim_64x80.png",
+        "characters/delia/portraits/delia_portrait_hurt_64x80.png"
+      ]
+    },
+    "kevin_reading": {
+      "name": "Kevin Tran — reading the tablet",
+      "sheet": "characters/kevin_reading/kevin_reading_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/kevin_reading/portraits/kevin_reading_portrait_steady_64x80.png",
+        "characters/kevin_reading/portraits/kevin_reading_portrait_grim_64x80.png",
+        "characters/kevin_reading/portraits/kevin_reading_portrait_hurt_64x80.png"
+      ]
+    },
+    "kevin": {
+      "name": "Kevin Tran — captive",
+      "sheet": "characters/kevin/kevin_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/kevin/portraits/kevin_portrait_steady_64x80.png",
+        "characters/kevin/portraits/kevin_portrait_grim_64x80.png",
+        "characters/kevin/portraits/kevin_portrait_hurt_64x80.png"
+      ]
+    },
+    "kevin_field": {
+      "name": "Kevin Tran",
+      "sheet": "characters/kevin_field/kevin_field_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/kevin_field/portraits/kevin_field_portrait_steady_64x80.png",
+        "characters/kevin_field/portraits/kevin_field_portrait_grim_64x80.png",
+        "characters/kevin_field/portraits/kevin_field_portrait_hurt_64x80.png"
+      ]
+    },
+    "crowley": {
+      "name": "Crowley",
+      "sheet": "characters/crowley/crowley_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/crowley/portraits/crowley_portrait_steady_64x80.png",
+        "characters/crowley/portraits/crowley_portrait_grim_64x80.png",
+        "characters/crowley/portraits/crowley_portrait_hurt_64x80.png"
+      ]
+    },
+    "juno": {
+      "name": "Juno",
+      "sheet": "characters/juno/juno_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/juno/portraits/juno_portrait_steady_64x80.png",
+        "characters/juno/portraits/juno_portrait_grim_64x80.png",
+        "characters/juno/portraits/juno_portrait_hurt_64x80.png"
+      ]
+    },
+    "castiel": {
+      "name": "Castiel",
+      "sheet": "characters/castiel/castiel_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/castiel/portraits/castiel_portrait_steady_64x80.png",
+        "characters/castiel/portraits/castiel_portrait_grim_64x80.png",
+        "characters/castiel/portraits/castiel_portrait_hurt_64x80.png"
+      ]
+    },
+    "castiel_black": {
+      "name": "Castiel — black coat",
+      "sheet": "characters/castiel_black/castiel_black_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/castiel_black/portraits/castiel_black_portrait_steady_64x80.png",
+        "characters/castiel_black/portraits/castiel_black_portrait_grim_64x80.png",
+        "characters/castiel_black/portraits/castiel_black_portrait_hurt_64x80.png"
+      ]
+    },
+    "chuck": {
+      "name": "Chuck",
+      "sheet": "characters/chuck/chuck_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/chuck/portraits/chuck_portrait_steady_64x80.png",
+        "characters/chuck/portraits/chuck_portrait_grim_64x80.png",
+        "characters/chuck/portraits/chuck_portrait_hurt_64x80.png"
+      ]
+    },
+    "sheriff": {
+      "name": "Sheriff Ames",
+      "sheet": "characters/sheriff/sheriff_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/sheriff/portraits/sheriff_portrait_steady_64x80.png",
+        "characters/sheriff/portraits/sheriff_portrait_grim_64x80.png",
+        "characters/sheriff/portraits/sheriff_portrait_hurt_64x80.png"
+      ]
+    },
+    "sarah": {
+      "name": "Sarah Lindqvist",
+      "sheet": "characters/sarah/sarah_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/sarah/portraits/sarah_portrait_steady_64x80.png",
+        "characters/sarah/portraits/sarah_portrait_grim_64x80.png",
+        "characters/sarah/portraits/sarah_portrait_hurt_64x80.png"
+      ]
+    },
+    "doctor": {
+      "name": "Dr. Halvorsen",
+      "sheet": "characters/doctor/doctor_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/doctor/portraits/doctor_portrait_steady_64x80.png",
+        "characters/doctor/portraits/doctor_portrait_grim_64x80.png",
+        "characters/doctor/portraits/doctor_portrait_hurt_64x80.png"
+      ]
+    },
+    "mechanic": {
+      "name": "Hank Ruiz (mechanic)",
+      "sheet": "characters/mechanic/mechanic_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/mechanic/portraits/mechanic_portrait_steady_64x80.png",
+        "characters/mechanic/portraits/mechanic_portrait_grim_64x80.png",
+        "characters/mechanic/portraits/mechanic_portrait_hurt_64x80.png"
+      ]
+    },
+    "old_man": {
+      "name": "Old Gus (recluse)",
+      "sheet": "characters/old_man/old_man_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/old_man/portraits/old_man_portrait_steady_64x80.png",
+        "characters/old_man/portraits/old_man_portrait_grim_64x80.png",
+        "characters/old_man/portraits/old_man_portrait_hurt_64x80.png"
+      ]
+    },
+    "possessed_mechanic": {
+      "name": "possessed_mechanic",
+      "sheet": "characters/possessed_mechanic/possessed_mechanic_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/possessed_mechanic/portraits/possessed_mechanic_portrait_steady_64x80.png",
+        "characters/possessed_mechanic/portraits/possessed_mechanic_portrait_grim_64x80.png",
+        "characters/possessed_mechanic/portraits/possessed_mechanic_portrait_hurt_64x80.png"
+      ]
+    },
+    "ghost_girl": {
+      "name": "The girl in the nightgown",
+      "sheet": "characters/ghost_girl/ghost_girl_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/ghost_girl/portraits/ghost_girl_portrait_steady_64x80.png",
+        "characters/ghost_girl/portraits/ghost_girl_portrait_grim_64x80.png",
+        "characters/ghost_girl/portraits/ghost_girl_portrait_hurt_64x80.png"
+      ]
+    },
+    "ghost_girl_fade": {
+      "name": "The girl in the nightgown — fading",
+      "sheet": "characters/ghost_girl_fade/ghost_girl_fade_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/ghost_girl_fade/portraits/ghost_girl_fade_portrait_steady_64x80.png",
+        "characters/ghost_girl_fade/portraits/ghost_girl_fade_portrait_grim_64x80.png",
+        "characters/ghost_girl_fade/portraits/ghost_girl_fade_portrait_hurt_64x80.png"
+      ]
+    },
+    "alistair": {
+      "name": "alistair",
+      "sheet": "characters/alistair/alistair_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/alistair/portraits/alistair_portrait_steady_64x80.png",
+        "characters/alistair/portraits/alistair_portrait_grim_64x80.png",
+        "characters/alistair/portraits/alistair_portrait_hurt_64x80.png"
+      ]
+    },
+    "alistair_void": {
+      "name": "alistair_void",
+      "sheet": "characters/alistair_void/alistair_void_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/alistair_void/portraits/alistair_void_portrait_steady_64x80.png",
+        "characters/alistair_void/portraits/alistair_void_portrait_grim_64x80.png",
+        "characters/alistair_void/portraits/alistair_void_portrait_hurt_64x80.png"
+      ]
+    },
+    "husk_worker": {
+      "name": "husk_worker",
+      "sheet": "characters/husk_worker/husk_worker_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/husk_worker/portraits/husk_worker_portrait_steady_64x80.png",
+        "characters/husk_worker/portraits/husk_worker_portrait_grim_64x80.png",
+        "characters/husk_worker/portraits/husk_worker_portrait_hurt_64x80.png"
+      ]
+    },
+    "husk_rain": {
+      "name": "husk_rain",
+      "sheet": "characters/husk_rain/husk_rain_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/husk_rain/portraits/husk_rain_portrait_steady_64x80.png",
+        "characters/husk_rain/portraits/husk_rain_portrait_grim_64x80.png",
+        "characters/husk_rain/portraits/husk_rain_portrait_hurt_64x80.png"
+      ]
+    },
+    "husk_teen": {
+      "name": "husk_teen",
+      "sheet": "characters/husk_teen/husk_teen_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/husk_teen/portraits/husk_teen_portrait_steady_64x80.png",
+        "characters/husk_teen/portraits/husk_teen_portrait_grim_64x80.png",
+        "characters/husk_teen/portraits/husk_teen_portrait_hurt_64x80.png"
+      ]
+    },
+    "husk_logger": {
+      "name": "husk_logger",
+      "sheet": "characters/husk_logger/husk_logger_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/husk_logger/portraits/husk_logger_portrait_steady_64x80.png",
+        "characters/husk_logger/portraits/husk_logger_portrait_grim_64x80.png",
+        "characters/husk_logger/portraits/husk_logger_portrait_hurt_64x80.png"
+      ]
+    },
+    "wrong_dean": {
+      "name": "wrong_dean",
+      "sheet": "characters/wrong_dean/wrong_dean_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/wrong_dean/portraits/wrong_dean_portrait_steady_64x80.png",
+        "characters/wrong_dean/portraits/wrong_dean_portrait_grim_64x80.png",
+        "characters/wrong_dean/portraits/wrong_dean_portrait_hurt_64x80.png"
+      ]
+    },
+    "wrong_sam": {
+      "name": "wrong_sam",
+      "sheet": "characters/wrong_sam/wrong_sam_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/wrong_sam/portraits/wrong_sam_portrait_steady_64x80.png",
+        "characters/wrong_sam/portraits/wrong_sam_portrait_grim_64x80.png",
+        "characters/wrong_sam/portraits/wrong_sam_portrait_hurt_64x80.png"
+      ]
+    },
+    "possessed_worker": {
+      "name": "possessed_worker",
+      "sheet": "characters/possessed_worker/possessed_worker_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/possessed_worker/portraits/possessed_worker_portrait_steady_64x80.png",
+        "characters/possessed_worker/portraits/possessed_worker_portrait_grim_64x80.png",
+        "characters/possessed_worker/portraits/possessed_worker_portrait_hurt_64x80.png"
+      ]
+    },
+    "possessed_rain": {
+      "name": "possessed_rain",
+      "sheet": "characters/possessed_rain/possessed_rain_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/possessed_rain/portraits/possessed_rain_portrait_steady_64x80.png",
+        "characters/possessed_rain/portraits/possessed_rain_portrait_grim_64x80.png",
+        "characters/possessed_rain/portraits/possessed_rain_portrait_hurt_64x80.png"
+      ]
+    },
+    "possessed_logger": {
+      "name": "possessed_logger",
+      "sheet": "characters/possessed_logger/possessed_logger_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/possessed_logger/portraits/possessed_logger_portrait_steady_64x80.png",
+        "characters/possessed_logger/portraits/possessed_logger_portrait_grim_64x80.png",
+        "characters/possessed_logger/portraits/possessed_logger_portrait_hurt_64x80.png"
+      ]
+    },
+    "possessed_delia": {
+      "name": "possessed_delia",
+      "sheet": "characters/possessed_delia/possessed_delia_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/possessed_delia/portraits/possessed_delia_portrait_steady_64x80.png",
+        "characters/possessed_delia/portraits/possessed_delia_portrait_grim_64x80.png",
+        "characters/possessed_delia/portraits/possessed_delia_portrait_hurt_64x80.png"
+      ]
+    },
+    "phantom": {
+      "name": "Ray Hollis (phantom)",
+      "sheet": "characters/phantom/phantom_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/phantom/portraits/phantom_portrait_steady_64x80.png",
+        "characters/phantom/portraits/phantom_portrait_grim_64x80.png",
+        "characters/phantom/portraits/phantom_portrait_hurt_64x80.png"
+      ]
+    },
+    "shade": {
+      "name": "Shade",
+      "sheet": "characters/shade/shade_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/shade/portraits/shade_portrait_steady_64x80.png",
+        "characters/shade/portraits/shade_portrait_grim_64x80.png",
+        "characters/shade/portraits/shade_portrait_hurt_64x80.png"
+      ]
+    },
+    "dwyer": {
+      "name": "dwyer",
+      "sheet": "characters/dwyer/dwyer_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/dwyer/portraits/dwyer_portrait_steady_64x80.png",
+        "characters/dwyer/portraits/dwyer_portrait_grim_64x80.png",
+        "characters/dwyer/portraits/dwyer_portrait_hurt_64x80.png"
+      ]
+    },
+    "mara": {
+      "name": "mara",
+      "sheet": "characters/mara/mara_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/mara/portraits/mara_portrait_steady_64x80.png",
+        "characters/mara/portraits/mara_portrait_grim_64x80.png",
+        "characters/mara/portraits/mara_portrait_hurt_64x80.png"
+      ]
+    },
+    "peter": {
+      "name": "peter",
+      "sheet": "characters/peter/peter_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/peter/portraits/peter_portrait_steady_64x80.png",
+        "characters/peter/portraits/peter_portrait_grim_64x80.png",
+        "characters/peter/portraits/peter_portrait_hurt_64x80.png"
+      ]
+    },
+    "leon": {
+      "name": "leon",
+      "sheet": "characters/leon/leon_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/leon/portraits/leon_portrait_steady_64x80.png",
+        "characters/leon/portraits/leon_portrait_grim_64x80.png",
+        "characters/leon/portraits/leon_portrait_hurt_64x80.png"
+      ]
+    },
+    "walter": {
+      "name": "walter",
+      "sheet": "characters/walter/walter_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/walter/portraits/walter_portrait_steady_64x80.png",
+        "characters/walter/portraits/walter_portrait_grim_64x80.png",
+        "characters/walter/portraits/walter_portrait_hurt_64x80.png"
+      ]
+    },
+    "ruth": {
+      "name": "ruth",
+      "sheet": "characters/ruth/ruth_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/ruth/portraits/ruth_portrait_steady_64x80.png",
+        "characters/ruth/portraits/ruth_portrait_grim_64x80.png",
+        "characters/ruth/portraits/ruth_portrait_hurt_64x80.png"
+      ]
+    },
+    "elise": {
+      "name": "elise",
+      "sheet": "characters/elise/elise_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/elise/portraits/elise_portrait_steady_64x80.png",
+        "characters/elise/portraits/elise_portrait_grim_64x80.png",
+        "characters/elise/portraits/elise_portrait_hurt_64x80.png"
+      ]
+    },
+    "daniel": {
+      "name": "daniel",
+      "sheet": "characters/daniel/daniel_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/daniel/portraits/daniel_portrait_steady_64x80.png",
+        "characters/daniel/portraits/daniel_portrait_grim_64x80.png",
+        "characters/daniel/portraits/daniel_portrait_hurt_64x80.png"
+      ]
+    },
+    "agnes": {
+      "name": "agnes",
+      "sheet": "characters/agnes/agnes_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/agnes/portraits/agnes_portrait_steady_64x80.png",
+        "characters/agnes/portraits/agnes_portrait_grim_64x80.png",
+        "characters/agnes/portraits/agnes_portrait_hurt_64x80.png"
+      ]
+    },
+    "ghost_boy": {
+      "name": "ghost_boy",
+      "sheet": "characters/ghost_boy/ghost_boy_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/ghost_boy/portraits/ghost_boy_portrait_steady_64x80.png",
+        "characters/ghost_boy/portraits/ghost_boy_portrait_grim_64x80.png",
+        "characters/ghost_boy/portraits/ghost_boy_portrait_hurt_64x80.png"
+      ]
+    },
+    "june": {
+      "name": "june",
+      "sheet": "characters/june/june_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/june/portraits/june_portrait_steady_64x80.png",
+        "characters/june/portraits/june_portrait_grim_64x80.png",
+        "characters/june/portraits/june_portrait_hurt_64x80.png"
+      ]
+    },
+    "hal": {
+      "name": "hal",
+      "sheet": "characters/hal/hal_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/hal/portraits/hal_portrait_steady_64x80.png",
+        "characters/hal/portraits/hal_portrait_grim_64x80.png",
+        "characters/hal/portraits/hal_portrait_hurt_64x80.png"
+      ]
+    },
+    "rosa": {
+      "name": "rosa",
+      "sheet": "characters/rosa/rosa_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/rosa/portraits/rosa_portrait_steady_64x80.png",
+        "characters/rosa/portraits/rosa_portrait_grim_64x80.png",
+        "characters/rosa/portraits/rosa_portrait_hurt_64x80.png"
+      ]
+    },
+    "martin": {
+      "name": "martin",
+      "sheet": "characters/martin/martin_sheet_32x56.png",
+      "frame": [
+        32,
+        56
+      ],
+      "rows": [
+        "front",
+        "side",
+        "back"
+      ],
+      "columns": [
+        "idle",
+        "walk1",
+        "walk2",
+        "act",
+        "hurt"
+      ],
+      "left_view": "mirror the side row",
+      "portraits": [
+        "characters/martin/portraits/martin_portrait_steady_64x80.png",
+        "characters/martin/portraits/martin_portrait_grim_64x80.png",
+        "characters/martin/portraits/martin_portrait_hurt_64x80.png"
+      ]
+    }
+  },
+  "props": [
+    "props/tree.png",
+    "props/lamp.png",
+    "props/barrel.png",
+    "props/fire_0.png",
+    "props/fire_1.png",
+    "props/fire_2.png",
+    "props/sigil.png",
+    "props/lampOff.png",
+    "props/counter.png",
+    "props/tablet.png",
+    "props/mattress.png",
+    "props/jukebox.png",
+    "props/pew.png",
+    "props/candle.png",
+    "props/altar.png",
+    "props/cross.png",
+    "props/coat.png",
+    "props/bed.png",
+    "props/drawings.png",
+    "props/inhaler.png",
+    "props/radio.png",
+    "props/popcorn.png",
+    "props/tendril_0.png",
+    "props/tendril_1.png",
+    "props/tendril_2.png",
+    "props/flask.png",
+    "props/flareShot.png",
+    "props/bench.png",
+    "props/mailbox.png",
+    "props/hydrant.png",
+    "props/pole.png",
+    "props/dumpster.png",
+    "props/payphone.png",
+    "props/motelSign.png",
+    "props/crate.png",
+    "props/trashcan.png",
+    "props/paper.png",
+    "props/fan.png",
+    "props/clipboard.png",
+    "props/body.png",
+    "props/panel.png",
+    "props/clock.png",
+    "props/plank.png",
+    "props/cabinet.png",
+    "props/tv.png",
+    "props/bell.png",
+    "props/bones.png",
+    "props/footprints.png",
+    "props/marker.png",
+    "props/bouquet.png",
+    "props/tag.png",
+    "props/lantern.png",
+    "props/musicbox.png",
+    "props/wardrobe.png",
+    "props/coatchair.png",
+    "props/cot.png",
+    "props/frame.png",
+    "props/door.png",
+    "props/monitor.png",
+    "props/sedanClock.png"
+  ],
+  "pickups": [
+    "pickups/medkit.png",
+    "pickups/bandage.png",
+    "pickups/shells.png",
+    "pickups/rounds.png",
+    "pickups/holywater.png",
+    "pickups/battery.png",
+    "pickups/cash.png",
+    "pickups/page.png",
+    "pickups/flares.png",
+    "pickups/armor.png",
+    "pickups/knife.png",
+    "pickups/flaregun.png"
+  ],
+  "cars": [
+    "vehicles/sedan_black_front.png",
+    "vehicles/sedan_black_side.png",
+    "vehicles/sedan_black_back.png",
+    "vehicles/sedan_rust_front.png",
+    "vehicles/sedan_rust_side.png",
+    "vehicles/sedan_rust_back.png",
+    "vehicles/parked_blue_front.png",
+    "vehicles/parked_blue_side.png",
+    "vehicles/parked_blue_back.png",
+    "vehicles/parked_white_front.png",
+    "vehicles/parked_white_side.png",
+    "vehicles/parked_white_back.png",
+    "vehicles/parked_green_front.png",
+    "vehicles/parked_green_side.png",
+    "vehicles/parked_green_back.png"
+  ]
+}
