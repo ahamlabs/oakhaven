@@ -1,0 +1,18 @@
+const {load}=require('./harness'); const G=load(); let t=0;
+G.begin('dean'); G.skipCutscene(); G.setRenderer('crisp'); G.applyPreset('dusk'); G.enterSector('street',28,34,-Math.PI/2);
+const time=(label,fn,N=60)=>{ for(let i=0;i<5;i++) fn(); const t0=process.hrtime.bigint(); for(let i=0;i<N;i++) fn();
+  console.log(label.padEnd(34), (Number(process.hrtime.bigint()-t0)/1e6/N).toFixed(2),'ms'); };
+const prep=()=>{ G.S.dirX=Math.cos(G.S.angle); G.S.dirY=Math.sin(G.S.angle); };
+time('full frame, no dyn lights',()=>{t+=16;G.frame(t);});
+G.SECTORS.street.entities.push({kind:'flarestuck',x:28,y:30,z:.1,r:.1,h:.2,m:'flareShot',lit:1,t:999});
+time('full frame, 1 flare',()=>{t+=16;G.frame(t);});
+time('gatherDyn+render only',()=>{G.gatherDyn();G.render();});
+time('drawViewmodel',()=>G.drawViewmodel());
+time('drawHUD',()=>G.drawHUD());
+const st=G.SECTORS.street, saved=st.entities;
+st.entities=saved.filter(e=>e.kind!=='car'&&e.kind!=='flarestuck');
+time('render, no dyn sources',()=>{G.gatherDyn();G.render();});
+st.entities=[];
+time('render, no entities at all',()=>{G.gatherDyn();G.render();});
+st.entities=saved;
+G.applyPreset('day'); time('render, day (no car lights)',()=>{G.gatherDyn();G.render();});

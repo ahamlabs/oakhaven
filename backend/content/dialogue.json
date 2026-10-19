@@ -1,0 +1,478 @@
+{
+ "marla": {
+  "start": "m0",
+  "nodes": {
+   "m0": {
+    "speaker": "Marla — night clerk",
+    "text": "You're not from the bank and you're not from the state, so I'm going to guess press. Third lot this month.\n\nCheckout's eleven. Ice machine's been broke since the mill closed, which tells you about how long that's been.",
+    "choices": [
+     {
+      "text": "We're looking into the deaths. Six men in five weeks.",
+      "next": "m1"
+     },
+     {
+      "text": "Just a room. And whatever's behind the counter.",
+      "next": "m_drink"
+     },
+     {
+      "text": "What happened to this town, Marla?",
+      "next": "m_town",
+      "tone": "open",
+      "effects": {
+       "alignment": {
+        "humanism": 1
+       }
+      }
+     }
+    ]
+   },
+   "m1": {
+    "speaker": "Marla — night clerk",
+    "text": "Deaths. That's a polite word for it.\n\nThey were mill men. Every one of them worked the green chain. They got told the plant was losing money and they believed it, because what else do you do. Then the severance ran out.",
+    "choices": [
+     {
+      "text": "You think it's just despair.",
+      "next": "m2",
+      "tone": "open",
+      "effects": {
+       "alignment": {
+        "humanism": 1
+       },
+       "flags": {
+        "marla_open": true
+       }
+      }
+     },
+     {
+      "text": "Six men, same method, same week of the month. That's not despair. That's a pattern.",
+      "next": "m2b",
+      "tone": "hard",
+      "effects": {
+       "alignment": {
+        "nihilism": 1
+       },
+       "flags": {
+        "marla_open": true
+       }
+      }
+     }
+    ]
+   },
+   "m2": {
+    "speaker": "Marla — night clerk",
+    "text": "I think a man can be killed slow and the paperwork still says he did it himself.\n\nBut no. Not just. Ray Hollis was the happiest of them. Bought a boat in March. In April he wouldn't cross the lot after dark, said the streetlights were watching him wrong.",
+    "choices": [
+     {
+      "text": "Wrong how?",
+      "next": "m3"
+     }
+    ]
+   },
+   "m2b": {
+    "speaker": "Marla — night clerk",
+    "text": "You've got a cop's mouth on you.\n\nFine. Pattern. They all went quiet the same way first. Stopped answering. Ray Hollis stopped crossing the lot after dark — said the streetlights were watching him wrong.",
+    "choices": [
+     {
+      "text": "Wrong how?",
+      "next": "m3"
+     }
+    ]
+   },
+   "m3": {
+    "speaker": "Marla — night clerk",
+    "text": "Said they'd hum when he was sad and go dark when he wasn't. Said the whole town got heavier around three in the morning, like something leaned on it.\n\nI laughed at him. He's in the ground now and I still hear the hum some nights.",
+    "choices": [
+     {
+      "text": "Who bought the mill?",
+      "next": "m4"
+     },
+     {
+      "text": "You should leave. Tonight, if you can.",
+      "next": "m_leave",
+      "tone": "open",
+      "effects": {
+       "alignment": {
+        "humanism": 2
+       },
+       "meters": {
+        "stress": -4
+       }
+      }
+     }
+    ]
+   },
+   "m4": {
+    "speaker": "Marla — night clerk",
+    "text": "Crossroads Holdings. Out of Delaware, address is a mailbox. They bought it profitable and ran it into the dirt inside eleven months. Took the machines, left the asbestos.\n\nNobody's ever seen a single employee.",
+    "choices": [
+     {
+      "text": "Where's the mill office?",
+      "next": "m5",
+      "effects": {
+       "flags": {
+        "mill_lead": true
+       },
+       "log": "Marla named the buyer: Crossroads Holdings."
+      }
+     }
+    ]
+   },
+   "m5": {
+    "speaker": "Marla — night clerk",
+    "text": "East end, past the cross street. Door's chained but the chain's been cut since February — kids, probably.\n\nDon't go at three.",
+    "choices": [
+     {
+      "text": "Thanks, Marla.",
+      "next": null
+     }
+    ]
+   },
+   "m_town": {
+    "speaker": "Marla — night clerk",
+    "text": "Same thing that happened to every town like it. Somebody in a building I'll never see decided we cost more than we made.\n\nThe rest is just weather.",
+    "choices": [
+     {
+      "text": "That's not weather. That's a decision somebody signed.",
+      "next": "m1",
+      "tone": "open",
+      "effects": {
+       "alignment": {
+        "humanism": 1
+       }
+      }
+     },
+     {
+      "text": "Six men are dead. I need the specifics, not the eulogy.",
+      "next": "m1",
+      "tone": "hard",
+      "effects": {
+       "alignment": {
+        "nihilism": 1
+       },
+       "meters": {
+        "stress": 3
+       }
+      }
+     }
+    ]
+   },
+   "m_drink": {
+    "speaker": "Marla — night clerk",
+    "text": "There's a fifth of rye under here older than you are. Costs eight dollars and it'll take the edge off tonight and put two more on tomorrow.\n\nYour call, honey.",
+    "choices": [
+     {
+      "text": "[Drink.] Take the edge off.",
+      "next": "m_drank",
+      "tone": "hard",
+      "effects": {
+       "meters": {
+        "stress": -22
+       },
+       "counters": {
+        "drinks": 1
+       },
+       "log": "Dean drank."
+      }
+     },
+     {
+      "text": "[Refuse.] Not tonight.",
+      "next": "m_refused",
+      "tone": "open",
+      "effects": {
+       "meters": {
+        "stress": 6
+       },
+       "counters": {
+        "refusals": 1
+       }
+      }
+     }
+    ]
+   },
+   "m_drank": {
+    "speaker": "Marla — night clerk",
+    "text": "There he is.\n\nThe shake goes out of your hands and the town goes soft at the corners. It's the first quiet you've had in four states.\n\nSomething in the back of your skull files it away as a solution.",
+    "choices": [
+     {
+      "text": "...",
+      "next": "m0"
+     }
+    ]
+   },
+   "m_refused": {
+    "speaker": "Marla — night clerk",
+    "text": "Suit yourself. Most men in here don't have that in them.\n\nYour hands don't stop. The hum in the lot gets a half-step louder, and you notice you can hear it at all.",
+    "choices": [
+     {
+      "text": "...",
+      "next": "m0"
+     }
+    ]
+   },
+   "m_leave": {
+    "speaker": "Marla — night clerk",
+    "text": "With what car, honey? With what money?\n\nBut — thank you. Nobody's said a thing like that to me in about two years.",
+    "choices": [
+     {
+      "text": "Who bought the mill?",
+      "next": "m4"
+     }
+    ]
+   }
+  }
+ },
+ "phantom": {
+  "start": "p0",
+  "nodes": {
+   "p0": {
+    "speaker": "The shape on the green chain",
+    "text": "It is a man made of sawdust and standing oil. Where its lungs were, the ASCII will not hold still.\n\n\"QUOTA,\" it says, and the word arrives inside your teeth rather than through the air. \"QUOTA. QUOTA. THE VENT WAS ON THE FORM.\"",
+    "choices": [
+     {
+      "text": "[Salt and iron.] Put it down. It's already dead.",
+      "next": "p_burn",
+      "tone": "hard",
+      "effects": {
+       "alignment": {
+        "nihilism": 2
+       },
+       "meters": {
+        "stress": 9
+       },
+       "counters": {
+        "ghosts_burned": 1
+       }
+      }
+     },
+     {
+      "text": "[Latin.] Try to let it finish the sentence first.",
+      "next": "p_talk",
+      "tone": "open",
+      "effects": {
+       "alignment": {
+        "humanism": 2
+       }
+      }
+     },
+     {
+      "text": "Which vent? Say the number.",
+      "next": "p_talk",
+      "tone": "open",
+      "effects": {
+       "alignment": {
+        "humanism": 1
+       }
+      }
+     }
+    ]
+   },
+   "p_burn": {
+    "speaker": "—",
+    "text": "Rock salt takes it across the chest and it comes apart like a struck bag of flour.\n\nIt does not scream. It says \"THANK\" and the second word is eaten by a seam in the air that should not be there — a tear, thin as a paper cut, that closes with a wet sound.\n\nSomething ate your ghost. That's new.",
+    "choices": [
+     {
+      "text": "[Note the tear.]",
+      "next": null,
+      "effects": {
+       "flags": {
+        "saw_tear": true
+       },
+       "act": 2,
+       "log": "Something is consuming the dead in Oakhaven."
+      }
+     }
+    ]
+   },
+   "p_talk": {
+    "speaker": "The shape on the green chain",
+    "text": "It stops. The oil on it goes still.\n\n\"FOURTEEN,\" it says. \"VENT FOURTEEN. I FILED IT IN MARCH. I FILED IT IN MARCH. THEY SAID IT WAS CAPITAL EXPENDITURE.\"\n\nIt looks at its own hands like it's checking whether they're still on the form.",
+    "choices": [
+     {
+      "text": "They killed you with a spreadsheet. I know. Go.",
+      "next": "p_rest",
+      "tone": "open",
+      "effects": {
+       "alignment": {
+        "humanism": 2
+       },
+       "meters": {
+        "stress": -6
+       },
+       "counters": {
+        "ghosts_freed": 1
+       },
+       "flags": {
+        "phantom_freed": true
+       }
+      }
+     }
+    ]
+   },
+   "p_rest": {
+    "speaker": "—",
+    "text": "It goes out like a pilot light — no violence in it at all.\n\nAnd then the empty air where it stood puckers. A seam opens, thin as a paper cut, and drinks the last of it before closing with a wet sound.\n\nSomething is eating the dead here. Salting the bones was never going to be enough.",
+    "choices": [
+     {
+      "text": "[Note the tear.]",
+      "next": null,
+      "effects": {
+       "flags": {
+        "saw_tear": true
+       },
+       "act": 2,
+       "log": "Something is consuming the dead in Oakhaven."
+      }
+     }
+    ]
+   }
+  }
+ },
+ "drinker": {
+  "start": "d0",
+  "nodes": {
+   "d0": {
+    "speaker": "A regular",
+    "text": "He doesn't look up. There are four empties in front of him and it isn't seven o'clock.\n\n\"If you're here about the mill, I got nothing. If you're here about Ray, I got less.\"",
+    "choices": [
+     {
+      "text": "I'm here about the hum.",
+      "next": "d1"
+     },
+     {
+      "text": "[Leave him alone.]",
+      "next": null,
+      "tone": "open",
+      "effects": {
+       "alignment": {
+        "humanism": 1
+       }
+      }
+     }
+    ]
+   },
+   "d1": {
+    "speaker": "A regular",
+    "text": "Now he looks up.\n\n\"Everybody hears it and nobody says it, and you walk in off the highway and say it first thing.\"\n\nHe pushes a beer mat across the bar. Someone has written on it in ballpoint, over and over, in a hand that got worse as it went:\n\n  while town.mood < 0.2: yield\n\n\"Found forty of these behind the dart board. Ray's writing. Ray couldn't type.\"",
+    "choices": [
+     {
+      "text": "[Take the beer mat.]",
+      "next": null,
+      "tone": "cipher",
+      "effects": {
+       "fragment": "bar:mat",
+       "give": [
+        "beer_mat"
+       ],
+       "log": "Ray Hollis was transcribing something that looks like a scheduler loop."
+      }
+     }
+    ]
+   }
+  }
+ },
+ "kevin": {
+  "start": "k0",
+  "nodes": {
+   "k0": {
+    "speaker": "Kevin Tran",
+    "text": "He is nineteen and looks forty. The light coming out of his eyes is the wrong colour for a room this dark.\n\n\"You're going to ask me to read it. Everyone asks me to read it. Last time I read it for four hours and afterwards I couldn't remember my mother's face for a week.\"",
+    "choices": [
+     {
+      "text": "Then don't read it. Sit down. We'll find another way.",
+      "next": "k_detox",
+      "tone": "open",
+      "effects": {
+       "alignment": {
+        "humanism": 3
+       },
+       "flags": {
+        "kevin_spared": true
+       }
+      }
+     },
+     {
+      "text": "I need the translation, Kevin. Now.",
+      "next": "k_burn",
+      "tone": "hard",
+      "effects": {
+       "alignment": {
+        "nihilism": 2
+       },
+       "flags": {
+        "kevin_used": true
+       },
+       "log": "Kevin translated. It cost him."
+      }
+     },
+     {
+      "text": "[Show him the fragments.] These aren't scripture. Look at the syntax.",
+      "next": "k_syntax",
+      "tone": "cipher",
+      "requires": {
+       "fragments": {
+        "gte": 4
+       },
+       "ascetic": true
+      }
+     }
+    ]
+   },
+   "k_detox": {
+    "speaker": "Kevin Tran",
+    "text": "He stares at you like you've spoken a language he'd stopped expecting.\n\n\"Nobody's offered me that. Not once. Not the angels, not you two, not God.\"\n\nIt takes three days and he screams through most of them. On the fourth morning he asks for eggs, and his eyes are just eyes.",
+    "choices": [
+     {
+      "text": "Rest. We'll handle the rest of it.",
+      "next": null,
+      "effects": {
+       "flags": {
+        "kevin_detoxed": true
+       },
+       "meters": {
+        "stress": -10
+       },
+       "log": "Kevin is lucid. That was not free."
+      }
+     }
+    ]
+   },
+   "k_burn": {
+    "speaker": "Kevin Tran",
+    "text": "He reads for four hours. Something behind his face gives way around hour three and he keeps going anyway, because you asked.\n\nWhen he stops, he can tell you exactly what the tablet says. He cannot tell you what year it is.",
+    "choices": [
+     {
+      "text": "[Take the translation.]",
+      "next": null,
+      "effects": {
+       "flags": {
+        "tablet_read": true
+       },
+       "meters": {
+        "stress": 12
+       },
+       "log": "You have the translation. Kevin does not have much left."
+      }
+     }
+    ]
+   },
+   "k_syntax": {
+    "speaker": "Kevin Tran",
+    "text": "He turns the beer mat over. Then the terminal printout. Then the third one.\n\nHis hands stop shaking, which is somehow worse.\n\n\"That's not Enochian. That's not any angelic tongue, I've read all of them.\" A long pause. \"That's a while loop. Sam — that's a *while loop*.\"",
+    "choices": [
+     {
+      "text": "Keep going.",
+      "next": "k_detox",
+      "tone": "cipher",
+      "effects": {
+       "flags": {
+        "kevin_suspects": true
+       },
+       "fragment": "kevin:recognition",
+       "log": "Kevin recognised the scripture as source code."
+      }
+     }
+    ]
+   }
+  }
+ }
+}

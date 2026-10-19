@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OAKHAVEN — pixel renderer</title>
+<style>
+:root{--void:#07090b;--bone:#cbbfae;--fog:#4c585f;--rust:#8a4b2a;--sodium:#d9a441;--bruise:#4d6f9a;
+ --mono:ui-monospace,"SF Mono","Cascadia Mono","DejaVu Sans Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--void);color:var(--bone);font-family:var(--mono);display:flex;
+ align-items:center;justify-content:center;overflow:hidden}
+#cab{width:min(97vw,1240px);display:flex;flex-direction:column}
+#vp{position:relative;background:#000;border:1px solid #1d2529;overflow:hidden;
+ line-height:0;aspect-ratio:384 / 200}
+#world{position:absolute;inset:0;width:100%;height:100%;
+ image-rendering:pixelated;image-rendering:crisp-edges}
+#over{position:absolute;inset:0;width:100%;height:100%}
+#band{display:flex;border:1px solid #1d2529;border-top:none;background:#0a0e10;font-size:11.5px}
+.g{flex:1;padding:8px 12px;border-right:1px solid #161d21;display:flex;flex-direction:column;gap:3px;min-width:0}
+.g:last-child{border-right:none}
+.g b{font-weight:400;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#5d6b73}
+.g span{white-space:pre;color:var(--fog);overflow:hidden;text-overflow:ellipsis}
+.g.on span{color:var(--sodium)}
+#dlg{position:absolute;inset:auto 0 0 0;background:linear-gradient(rgba(7,9,11,0),rgba(7,9,11,.95) 22%,#07090b);
+ padding:56px 28px 20px;display:none;flex-direction:column;gap:11px}
+#dlg.on{display:flex}
+#spk{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--sodium)}
+#line{font-size:14.5px;line-height:1.6;max-width:76ch;white-space:pre-wrap}
+#ch{display:flex;flex-direction:column;gap:4px}
+.c{background:none;border:none;color:var(--fog);font:inherit;font-size:13px;text-align:left;
+ padding:4px 0 4px 24px;position:relative;cursor:pointer}
+.c::before{content:attr(data-k);position:absolute;left:0;color:#39444a}
+.c:hover,.c:focus-visible{color:var(--bone);outline:none}
+#toast{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-size:11px;
+ letter-spacing:.18em;text-transform:uppercase;color:var(--sodium);opacity:0;transition:opacity .3s;
+ pointer-events:none;text-shadow:0 0 12px rgba(217,164,65,.5)}
+#toast.on{opacity:1}
+#boot{position:absolute;inset:0;background:var(--void);display:flex;flex-direction:column;
+ align-items:center;justify-content:center;gap:20px;text-align:center;padding:26px;line-height:1.5}
+#boot.off{display:none}
+#boot h1{font-size:clamp(26px,5vw,48px);font-weight:400;letter-spacing:.46em;text-indent:.46em}
+#boot .s{font-size:10px;letter-spacing:.3em;color:#4a565c;text-transform:uppercase;margin-top:7px}
+#pk{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.p{width:255px;max-width:42vw;border:1px solid #232c31;background:#0a0d0f;padding:14px 16px;
+ text-align:left;cursor:pointer;color:var(--fog);font:inherit}
+.p:hover,.p:focus-visible{outline:none;background:#0e1316}
+.p.d:hover{border-color:var(--rust)} .p.s:hover{border-color:var(--bruise)}
+.p h2{font-size:14px;font-weight:400;letter-spacing:.22em;text-transform:uppercase;color:var(--bone);margin-bottom:3px}
+.p em{font-style:normal;font-size:11px;display:block;margin-bottom:8px}
+.p.d em{color:var(--rust)} .p.s em{color:var(--bruise)}
+.p p{font-size:11.5px;line-height:1.6}
+#hint{font-size:11px;color:#5d6b73;line-height:1.9;max-width:62ch}
+#hint em{color:var(--bone);font-style:normal}
+#hint .big{color:var(--sodium)}
+</style>
+</head>
+<body>
+<div id="cab">
+ <div id="vp">
+  <canvas id="world"></canvas>
+  <canvas id="over"></canvas>
+  <div id="toast"></div>
+  <div id="dlg"><div id="spk"></div><div id="line"></div><div id="ch"></div></div>
+  <div id="boot">
+   <div><h1>OAKHAVEN</h1><div class="s">pixel renderer · same engine</div></div>
+   <div id="pk">
+    <button class="p d" id="pd"><h2>Dean</h2><em>absurdism</em>
+     <p>Shotgun, iron, salt. Kicks doors. Fast, loud, leaves bodies.</p></button>
+    <button class="p s" id="ps"><h2>Sam</h2><em>humanism</em>
+     <p>Channelled Latin rite. Slow, breaks if he moves, leaves the host alive.</p></button>
+   </div>
+   <div id="hint">
+    <span class="big">P cycles pixel mode · M opens the map · Tab flips to ASCII</span><br>
+    Doom mode is 320×200 at a 1.2 pixel aspect, 256 colours, and no vertical look.<br>
+    <em>WASD</em> move · <em>mouse</em> look · <em>E</em> interact / drive · <em>F</em> torch<br>
+    <em>Space</em> attack · <em>L</em> time of day · <em>H</em> high beams · <em>1–4</em> answer
+   </div>
+  </div>
+ </div>
+ <div id="band">
+  <div class="g" id="gMode"><b>Renderer (Tab)</b><span></span></div>
+  <div class="g" id="gWho"><b>Hunter</b><span></span></div>
+  <div class="g" id="gTorch"><b>Torch (F)</b><span></span></div>
+  <div class="g" id="gArm"><b>Loadout</b><span></span></div>
+  <div class="g" id="gLight"><b>Light (L)</b><span></span></div>
+  <div class="g" id="gObj"><b>Objective (M)</b><span></span></div>
+  <div class="g" id="gLoc"><b>Location</b><span></span></div>
+ </div>
+</div>
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════════════════════
+   OAKHAVEN — pixel renderer
+
+   Same engine as the ASCII build. The DDA raycast, the baked lightmaps, the
+   sprite projection, the physics, the driving, the dialogue schema — all
+   unchanged. The only thing that differs is the final rasterisation stage:
+   instead of resolving a surface sample to a glyph + palette index, it
+   resolves to a 32-bit pixel.
+
+   That swap is why ASCII survives here as a *post-process* (Tab) rather than
+   as the renderer. Which turns out to be the useful arrangement: the game is
+   about discovering reality is rendered, so characters bleeding into text as
+   the veil thins is a narrative device instead of a permanent art style.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Pixel modes. These differ in pixel *geometry*, not art direction.
+   Doom rendered a 320×200 buffer and displayed it at 4:3, so its pixels were
+   1.2× taller than wide — that vertical squash is a large part of what the
+   look actually is. It also had no vertical look: the horizon is fixed at the
+   centre of the screen and the projection is a true 2.5D. Build engine games
+   (Duke, Blood) faked looking up and down by y-shearing that horizon, which is
+   what the later modes do here. */
+const PIXEL_MODES = {
+  doom:   {name:'Doom 320×200',   w:320, h:200, par:1.2, quantise:true,  pitch:'none',  dim:1.00},
+  build:  {name:'Build 320×240',  w:320, h:240, par:1.2, quantise:true,  pitch:'shear', dim:0.82},
+  modern: {name:'Modern 480×270', w:480, h:270, par:1.0, quantise:false, pitch:'shear', dim:0.55},
+  crisp:  {name:'Crisp 640×400',  w:640, h:400, par:1.0, quantise:false, pitch:'shear', dim:0.55},
+};
+let MODE = PIXEL_MODES.doom;
+let IW = MODE.w, IH = MODE.h;
+const FOVP = 0.72, VIEWD = 26;
+const LEVELS = 48;                 // light steps; textures are pre-shaded per level
+
+const world = document.getElementById('world');
+const over  = document.getElementById('over');
+world.width = IW; world.height = IH;
+const wctx = world.getContext('2d', {alpha:false});
+const octx = over.getContext('2d');
+let img = wctx.createImageData(IW, IH);
+let fb  = new Uint32Array(img.data.buffer);
+let zbuf = new Float32Array(IW);
+
+/* Little-endian ABGR packing, so a pixel is one array store. */
+const rgb = (r,g,b) => (255<<24) | ((b&255)<<16) | ((g&255)<<8) | (r&255);
+const clamp255 = v => v<0?0:v>255?255:v|0;
+
+/* A Doom-style 256-entry palette: sixteen ramps of sixteen. Almost all of
+   Doom's palette was ramps, which is why its shading reads as one coherent
+   image rather than as independently tinted surfaces. */
+const PALETTE = new Uint32Array(256);
+{
+  const ramps = [
+    [10,10,10, 236,236,236],  [14,10,6,  232,196,148],
+    [12,6,4,   204,116,64],   [10,6,4,   168,86,48],
+    [8,5,3,    150,110,62],   [10,8,5,   186,150,96],
+    [4,8,6,    96,168,110],   [4,6,10,   92,132,196],
+    [6,4,10,   130,96,190],   [12,4,6,   208,60,60],
+    [10,10,4,  232,224,120],  [4,10,10,  110,196,200],
+    [6,6,8,    132,140,158],  [8,6,5,    140,120,104],
+    [3,3,4,    70,78,90],     [12,10,8,  252,232,196],
+  ];
+  for(let r=0;r<16;r++){
+    const [r0,g0,b0,r1,g1,b1]=ramps[r];
+    for(let i=0;i<16;i++){
+      const t=Math.pow(i/15,0.78);
+      PALETTE[r*16+i]=(255<<24)|(((b0+(b1-b0)*t)|0)<<16)|(((g0+(g1-g0)*t)|0)<<8)|((r0+(r1-r0)*t)|0);
+    }
+  }
+}
+/* Nearest-palette lookup, precomputed over a 32³ RGB cube. Resolving each
+   colour by scanning the palette would be ~590M comparisons across the light
+   tables; the cube makes every lookup O(1). */
+const QCUBE = new Uint8Array(32768);
+{
+  const pr=[],pg=[],pb=[];
+  for(let i=0;i<256;i++){ const c=PALETTE[i]; pr.push(c&255); pg.push((c>>8)&255); pb.push((c>>16)&255); }
+  for(let r=0;r<32;r++) for(let g=0;g<32;g++) for(let b=0;b<32;b++){
+    const R=r*8+4,G=g*8+4,B=b*8+4;
+    let best=0,bd=1e9;
+    for(let i=0;i<256;i++){
+      const d=(pr[i]-R)**2*0.30+(pg[i]-G)**2*0.59+(pb[i]-B)**2*0.11;
+      if(d<bd){bd=d;best=i;}
+    }
+    QCUBE[(r<<10)|(g<<5)|b]=best;
+  }
+}
+const quant = c => PALETTE[QCUBE[((((c)&255)>>3)<<10)|(((((c)>>8)&255)>>3)<<5)|((((c)>>16)&255)>>3)]];
+
+let seed = 1337;
+function rnd(){ seed = (seed*1664525 + 1013904223) & 0x7fffffff; return seed/0x7fffffff; }
+function noise(x,y){ let h=(x*374761393 + y*668265263)|0;
+  h=(h^(h>>13))*1274126177|0; return ((h^(h>>16))>>>0)/4294967295; }
+
+/* ── Texture generation ───────────────────────────────────────────────────
+   Procedural rather than authored: 64×64 surfaces built from noise and
+   simple masonry rules. Cheap to tweak, and no binary assets to ship. */
+function tex(w,h,fn){ const px=new Uint32Array(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) px[y*w+x]=fn(x,y);
+  return {w,h,px}; }
+
+const T = {};
+T.brick = tex(64,64,(x,y)=>{
+  const row=(y/8)|0, off=(row%2)*8, bx=(x+off)%16, by=y%8;
+  const n=noise(x,y)*22-8;
+  if(bx===0||by===0) return rgb(clamp255(52+n*.4),clamp255(46+n*.4),clamp255(42+n*.4));
+  return rgb(clamp255(124+n),clamp255(66+n*.6),clamp255(48+n*.5));
+});
+T.wood = tex(64,64,(x,y)=>{
+  const plank=(y/11)|0, edge=(y%11)===0;
+  const grain=Math.sin(x*0.55+plank*3.1)*7 + noise(x,plank)*26-10;
+  if(edge) return rgb(38,28,20);
+  const nail=(x%29===4&&y%11===5);
+  if(nail) return rgb(84,78,72);
+  return rgb(clamp255(118+grain),clamp255(84+grain*.75),clamp255(52+grain*.5));
+});
+T.steel = tex(64,64,(x,y)=>{
+  const c=Math.sin(x*0.78)*0.5+0.5;           // corrugation
+  const n=noise(x,y)*16-8;
+  const rust=noise((x/7)|0,(y/7)|0);
+  const base=52+c*74+n;
+  if(rust>0.87) return rgb(clamp255(base*.9+40),clamp255(base*.55),clamp255(base*.35));
+  return rgb(clamp255(base),clamp255(base+4),clamp255(base+7));
+});
+T.glass = tex(64,64,(x,y)=>{
+  const frame = x<3||x>60||y<3||y>60||Math.abs(x-32)<2||Math.abs(y-32)<2;
+  if(frame) return rgb(46,38,32);
+  const sheen = clamp255(28 + (x+y)%40*1.4 + noise(x,y)*30);
+  return rgb(clamp255(sheen*.5),clamp255(sheen*.8),clamp255(sheen));
+});
+T.door = tex(64,64,(x,y)=>{
+  const border = x<4||x>59||y<4||y>59;
+  const panel = (x>10&&x<53)&&((y>10&&y<28)||(y>35&&y<53));
+  const handle = (x-50)*(x-50)+(y-32)*(y-32) < 9;
+  const n=noise(x,y)*18-8;
+  if(handle) return rgb(188,162,86);
+  if(border) return rgb(clamp255(96+n),clamp255(62+n*.6),clamp255(38+n*.4));
+  if(panel)  return rgb(clamp255(72+n),clamp255(46+n*.6),clamp255(28+n*.4));
+  return rgb(clamp255(112+n),clamp255(74+n*.6),clamp255(46+n*.4));
+});
+T.crt = tex(64,64,(x,y)=>{
+  const bez = x<6||x>57||y<6||y>57;
+  if(bez) return rgb(40,42,44);
+  const scan = (y%3===0)?0.55:1;
+  const g = clamp255((60+noise(x,y)*90)*scan);
+  return rgb(clamp255(g*0.2),clamp255(g),clamp255(g*0.4));
+});
+T.fog = tex(64,64,(x,y)=>{ const n=noise(x,y)*70+noise(x>>2,y>>2)*60;
+  return rgb(clamp255(58+n*.5),clamp255(66+n*.5),clamp255(74+n*.5)); });
+/* floors */
+T.asphalt = tex(64,64,(x,y)=>{ const n=noise(x,y)*46-18;
+  return rgb(clamp255(58+n),clamp255(60+n),clamp255(62+n)); });
+T.walk = tex(64,64,(x,y)=>{ const seam=(x%16===0)||(y%16===0); const n=noise(x,y)*30-12;
+  if(seam) return rgb(52,56,58);
+  return rgb(clamp255(104+n),clamp255(106+n),clamp255(100+n)); });
+T.dirt = tex(64,64,(x,y)=>{ const n=noise(x,y)*54-20;
+  return rgb(clamp255(84+n),clamp255(70+n),clamp255(50+n)); });
+T.plaster = tex(64,64,(x,y)=>{ const n=noise(x,y)*30-12, stain=noise(x>>3,y>>3);
+  const b=140+n-(stain>0.8?38:0);
+  return rgb(clamp255(b),clamp255(b*.94),clamp255(b*.84)); });
+T.boards = tex(64,64,(x,y)=>{ const p=(y%16===0); const g=Math.sin(x*.4)*8+noise(x,y)*22-9;
+  if(p) return rgb(44,34,25);
+  return rgb(clamp255(104+g),clamp255(76+g*.7),clamp255(48+g*.5)); });
+
+/* Doom-style light tables: every texture pre-shaded into LEVELS copies, so
+   lighting in the inner loop is an array index rather than three multiplies
+   per pixel. */
+function shadeTable(t){
+  const out=new Array(LEVELS);
+  for(let l=0;l<LEVELS;l++){
+    const f=Math.pow(l/(LEVELS-1), 0.82);
+    const a=new Uint32Array(t.px.length);
+    for(let i=0;i<t.px.length;i++){
+      const c=t.px[i]; const al=c>>>24;
+      if(!al){ a[i]=0; continue; }
+      const sh=(al<<24)|((((c>>16)&255)*f|0)<<16)|((((c>>8)&255)*f|0)<<8)|((c&255)*f|0);
+      a[i]= MODE.quantise ? quant(sh) : sh;
+    }
+    out[l]=a;
+  }
+  return {w:t.w,h:t.h,lit:out};
+}
+const RAW={}; for(const k in T) RAW[k]=T[k];
+for(const k in T) T[k]=shadeTable(RAW[k]);
+const lvl = v => { const l=(v*(LEVELS-1))|0; return l<0?0:l>LEVELS-1?LEVELS-1:l; };
+
+/* Ordered dithering across the light steps. Quantising illumination into
+   discrete tables is what makes the inner loop one array read, but a floor
+   receding into fog crosses every step in sequence and the seams show as
+   bands. A 4×4 Bayer offset scatters each pixel across the boundary instead,
+   which costs one array read and removes the banding entirely. */
+const BAYER = new Float32Array(16);      // raw, in [-0.5, 0.5]
+[0,8,2,10, 12,4,14,6, 3,11,1,9, 15,7,13,5]
+  .forEach((v,i)=>{ BAYER[i]=v/16-0.46; });
+const DITH = new Float32Array(16);       // scaled to one light step
+for(let i=0;i<16;i++) DITH[i]=BAYER[i]/(LEVELS-1);
+const dlvl = (v,x,y) => lvl(v + DITH[(x&3)+((y&3)<<2)]);
+
+/* ── Sprites ──────────────────────────────────────────────────────────────
+   Indexed pixel art. '.' is transparent; every other character indexes the
+   model's palette. Palette-swapping one silhouette is how the possessed
+   townspeople are made — same body, wrong eyes, wrong skin. */
+function sprite(pal, rows){  // returns raw; shading happens after all models exist
+  const h=rows.length, w=rows[0].length;
+  const px=new Uint32Array(w*h);
+  for(let y=0;y<h;y++){
+    if(rows[y].length!==w) throw new Error(`ragged sprite row ${y}: ${rows[y].length} vs ${w}`);
+    for(let x=0;x<w;x++){
+      const ch=rows[y][x];
+      px[y*w+x] = ch==='.' ? 0 : pal[parseInt(ch,16)];
+    }
+  }
+  return {w,h,px};
+}
+const BODY = [
+"................",
+".....111111.....",
+"....14444441....",
+"...1444444441...",
+"...1422222241...",
+"...1429229241...",
+"...1422222241...",
+"...1423332241...",
+"....14222241....",
+".....122221.....",
+".....155551.....",
+"....15555551....",
+"...1555555551...",
+"..155555555551..",
+"..125555555521..",
+"..125555555521..",
+"...1555555551...",
+"...1566666651...",
+"....17711771....",
+"....17711771....",
+"....17711771....",
+"....17711771....",
+"....18811881....",
+"...1888118881..."];
+
+const P_CIV  = [0, rgb(26,20,16), rgb(198,158,122), rgb(150,112,86), rgb(74,50,34),
+                rgb(74,96,112), rgb(50,68,82), rgb(56,52,64), rgb(38,34,32), rgb(30,26,24)];
+const P_POSS = [0, rgb(14,10,12), rgb(178,176,170), rgb(126,124,120), rgb(38,32,34),
+                rgb(46,38,44), rgb(30,24,30), rgb(30,26,30), rgb(20,16,18), rgb(6,4,6)];
+const P_CLERK= [0, rgb(26,20,16), rgb(206,170,138), rgb(158,120,94), rgb(112,86,64),
+                rgb(126,74,58), rgb(92,52,40), rgb(52,48,56), rgb(36,32,30), rgb(28,24,22)];
+
+const SPR = {
+  civilian:  sprite(P_CIV,  BODY),
+  possessed: sprite(P_POSS, BODY),
+  clerk:     sprite(P_CLERK,BODY),
+  phantom: sprite([0, rgb(96,132,150), rgb(150,190,206), rgb(60,92,110), rgb(196,228,240),
+                   rgb(40,66,84), rgb(28,48,62)],[
+"................",
+".....222222.....",
+"....22111122....",
+"...2211111122...",
+"...2141111412...",
+"...2144114412...",
+"...2111111112...",
+"...2113113112...",
+"....21111112....",
+".....221122.....",
+"....22111122....",
+"...2211111122...",
+"..221111111122..",
+"..211111111112..",
+"..311111111113..",
+"...3111111113...",
+"....33111133....",
+".....353353.....",
+"....3.5335.3....",
+".....5.33.5.....",
+"......3..3......",
+".......55.......",
+"................",
+"................"]),
+};
+
+/* Props are drawn rather than typed — vehicles and foliage are cleaner from
+   primitives than from hand-placed pixels. */
+function canvasSprite(w,h,draw){
+  const px=new Uint32Array(w*h);
+  const api={
+    set:(x,y,c)=>{ if(x>=0&&y>=0&&x<w&&y<h) px[(y|0)*w+(x|0)]=c; },
+    rect:(x0,y0,x1,y1,c)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) api.set(x,y,c); },
+    disc:(cx,cy,r,c)=>{ for(let y=cy-r;y<=cy+r;y++) for(let x=cx-r;x<=cx+r;x++)
+      if((x-cx)**2+(y-cy)**2<=r*r) api.set(x,y,c); },
+  };
+  draw(api);
+  return {w,h,px};
+}
+SPR.impala = canvasSprite(44,26,a=>{
+  const body=rgb(22,26,34), body2=rgb(38,44,56), glass=rgb(70,92,104),
+        chrome=rgb(168,174,180), tyre=rgb(18,16,16), lampC=rgb(255,238,196);
+  a.rect(6,10,37,20,body);                    // hull
+  a.rect(4,13,39,19,body);
+  a.rect(11,4,32,10,body2);                   // roof
+  a.rect(13,6,30,9,glass);                    // windscreen
+  a.rect(6,19,37,20,rgb(14,16,20));
+  a.rect(4,16,39,16,chrome);                  // trim
+  a.disc(11,16,3,lampC); a.disc(32,16,3,lampC);
+  a.disc(11,16,1,rgb(255,255,244)); a.disc(32,16,1,rgb(255,255,244));
+  a.rect(18,14,25,17,chrome);                 // grille
+  for(let x=18;x<=25;x+=2) a.rect(x,14,x,17,rgb(30,32,36));
+  a.disc(9,22,3,tyre); a.disc(34,22,3,tyre);
+  a.disc(9,22,1,rgb(96,98,100)); a.disc(34,22,1,rgb(96,98,100));
+});
+SPR.tree = canvasSprite(30,46,a=>{
+  const bark=rgb(58,42,28), bark2=rgb(38,28,18);
+  a.rect(13,32,16,45,bark); a.rect(13,32,14,45,bark2);
+  for(let i=0;i<7;i++){
+    const y=4+i*4.6, hw=3+i*1.9;
+    const g=rgb(28+i*4, 68+i*7, 34+i*4);
+    for(let x=15-hw;x<=15+hw;x++)
+      for(let yy=y;yy<y+6;yy++)
+        if(noise(x,yy|0)>0.22) a.set(x,yy|0,g);
+  }
+});
+SPR.lamp = canvasSprite(14,46,a=>{
+  const pole=rgb(52,56,58);
+  a.rect(6,8,8,45,pole); a.rect(4,44,10,45,pole);
+  a.rect(2,3,12,7,rgb(64,68,70));
+  a.rect(3,6,11,8,rgb(255,236,178));
+  a.rect(4,7,10,8,rgb(255,250,224));
+});
+SPR.barrel = canvasSprite(18,22,a=>{
+  const m=rgb(78,72,60), m2=rgb(56,50,42), band=rgb(102,96,84);
+  a.rect(2,2,15,21,m);
+  for(let y=2;y<=21;y++) for(let x=2;x<=15;x++) if(noise(x,y)>0.8) a.set(x,y,m2);
+  a.rect(2,5,15,6,band); a.rect(2,16,15,17,band);
+  a.rect(2,2,15,3,rgb(94,88,76));
+});
+
+function setPixelMode(key){
+  const m=PIXEL_MODES[key]; if(!m) return;
+  const requant = m.quantise!==MODE.quantise;
+  MODE=m; IW=m.w; IH=m.h;
+  world.width=IW; world.height=IH;
+  img=wctx.createImageData(IW,IH);
+  fb=new Uint32Array(img.data.buffer);
+  zbuf=new Float32Array(IW);
+  coneLut=new Float32Array(IW);
+  dsArr=new Int32Array(IW); deArr=new Int32Array(IW);
+  if(m.pitch!=='shear') S.pitch=0;
+  /* Pixel aspect ratio is applied by the display, exactly as a 320×200 buffer
+     shown on a 4:3 monitor was. The buffer itself stays square. */
+  document.getElementById('vp').style.aspectRatio=`${IW*m.par} / ${IH}`;
+  if(requant) rebuildTables();
+  resize();
+}
+function rebuildTables(){
+  for(const k in T) T[k]=shadeTable(RAW[k]);
+  for(const k in SPR) SPR[k]=shadeTable(RAWSPR[k]);
+}
+
+const RAWSPR={}; for(const k in SPR) RAWSPR[k]=SPR[k];
+for(const k in SPR) SPR[k]=shadeTable(RAWSPR[k]);
+
+/* ── Map ──────────────────────────────────────────────────────────────── */
+const WALL_TEX = {'#':'brick','W':'wood','G':'glass','=':'steel','+':'door','T':'crt','S':'fog'};
+const FLOOR_TEX = {'.':'asphalt', ',':'walk', ' ':'dirt', 'o':'boards'};
+const SOLID = "#WG=+TS";
+const EMIT = {'T':0.9};
+
+function Grid(w,h,f){ const r=[]; for(let y=0;y<h;y++) r.push(new Array(w).fill(f)); return r; }
+function rect(g,x0,y0,x1,y1,c){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(g[y]?.[x]!==undefined) g[y][x]=c; }
+function box(g,x0,y0,x1,y1,c){ for(let x=x0;x<=x1;x++){g[y0][x]=c;g[y1][x]=c;}
+  for(let y=y0;y<=y1;y++){g[y][x0]=c;g[y][x1]=c;} }
+
+function street(){
+  const W=56,H=46,g=Grid(W,H,' ');
+  box(g,0,0,W-1,H-1,'#');
+  rect(g,25,1,30,H-2,'.'); rect(g,1,20,W-2,25,'.');
+  rect(g,23,1,24,H-2,','); rect(g,31,1,32,H-2,',');
+  rect(g,1,18,W-2,19,','); rect(g,1,26,W-2,27,',');
+  box(g,6,6,20,16,'W'); rect(g,8,6,11,6,'G'); rect(g,15,6,18,6,'G');
+  box(g,6,30,19,40,'#'); rect(g,6,33,6,37,'G'); g[30][12]='+';
+  box(g,36,5,50,15,'#'); rect(g,36,8,36,12,'G');
+  box(g,36,31,51,42,'W'); rect(g,38,31,41,31,'G'); g[31][45]='+';
+  rect(g,21,10,22,12,' '); g[11][21]='T';
+  return {id:'street',name:'Main Street',grid:g,outdoor:true,ambient:.55,
+    spawn:{x:27.5,y:41,a:-Math.PI/2},
+    doors:{'12,30':{to:'motel',x:10,y:3,a:Math.PI/2},'45,31':{to:'mill',x:14,y:3,a:Math.PI/2}},
+    lights:[{x:24,y:9,p:3.2,f:.10},{x:31.5,y:17,p:3.2,f:.10},{x:24,y:29,p:3.2,f:.10},
+            {x:31.5,y:38,p:3.2,f:.10},{x:12,y:31.6,p:1.8,f:.22}],
+    entities:[
+      {m:'lamp',kind:'prop',x:24,y:9,r:.3,h:5.2,emit:1},{m:'lamp',kind:'prop',x:31.5,y:17,r:.3,h:5.2,emit:1},
+      {m:'lamp',kind:'prop',x:24,y:29,r:.3,h:5.2,emit:1},{m:'lamp',kind:'prop',x:31.5,y:38,r:.3,h:5.2,emit:1},
+      {m:'tree',kind:'prop',x:3.5,y:10.5,r:.5,h:5.4},{m:'tree',kind:'prop',x:3.5,y:34.5,r:.5,h:5.4},
+      {m:'tree',kind:'prop',x:52.5,y:22.5,r:.5,h:5.4},{m:'tree',kind:'prop',x:34.5,y:44,r:.5,h:5.4},
+      {m:'barrel',kind:'prop',x:22,y:29,r:.35,h:1.3},
+      {m:'impala',kind:'vehicle',x:29,y:40,r:.7,h:1.9,heading:-Math.PI/2,speed:0},
+      {m:'impala',kind:'car',x:27,y:44,r:.7,h:1.9,speed:2.4,node:0,emit:.55,
+       route:[[27,44],[27,22.5],[6,22.5],[27,22.5],[27,44]]},
+      {m:'civilian',kind:'walker',x:23.5,y:35,r:.28,h:1.85,speed:.7},
+      {m:'civilian',kind:'walker',x:32.5,y:12,r:.28,h:1.85,speed:.55},
+      {m:'possessed',kind:'walker',x:15,y:26.5,r:.28,h:1.85,speed:.8},
+    ]};
+}
+function room(id,name,W,H,wall,amb){
+  const g=Grid(W,H,'o'); box(g,0,0,W-1,H-1,wall);
+  return {id,name,grid:g,outdoor:false,ambient:amb,doors:{},lights:[],entities:[]};
+}
+function motel(){
+  const s=room('motel','Motel — front office',20,15,'W',.30);
+  rect(s.grid,4,6,15,6,'W'); rect(s.grid,8,6,10,6,'o'); s.grid[14][10]='+';
+  s.doors['10,14']={to:'street',x:12,y:31.6,a:Math.PI/2};
+  s.spawn={x:10,y:12,a:-Math.PI/2};
+  s.lights=[{x:9.5,y:3,p:2.6,f:.16},{x:10,y:12,p:1.6,f:.26}];
+  s.entities=[{m:'clerk',kind:'npc',x:9.5,y:4,r:.35,h:1.85,dialogue:'marla',name:'Marla'}];
+  return s;
+}
+function mill(){
+  const s=room('mill','Oakhaven Mill & Timber',28,22,'=',.06);
+  const g=s.grid;
+  for(const x of [6,12,18]){ rect(g,x,6,x+1,15,'='); rect(g,x,10,x+1,11,'o'); }
+  g[21][14]='+'; g[6][24]='T';
+  s.doors['14,21']={to:'street',x:45.5,y:32.5,a:Math.PI/2};
+  s.spawn={x:14,y:19,a:-Math.PI/2};
+  s.lights=[{x:24,y:6,p:2.6,f:.24,natural:true},{x:14,y:20,p:2.2,f:.16,natural:true},
+            {x:9,y:8,p:1.8,f:.20,natural:true}];
+  s.entities=[
+    {m:'barrel',kind:'prop',x:22.5,y:17.5,r:.35,h:1.3},
+    {m:'phantom',kind:'npc',x:15.5,y:8,r:.4,h:2.0,dialogue:'phantom',hover:1,etype:'ghost',hp:60,emit:.35}];
+  return s;
+}
+const SECTORS={}; [street(),motel(),mill()].forEach(s=>SECTORS[s.id]=s);
+
+/* ── Lightmaps: baked once per sector, with line of sight ─────────────── */
+function pack(s){
+  s.H=s.grid.length; s.W=s.grid[0].length;
+  const n=s.W*s.H;
+  s.solid=new Uint8Array(n); s.cell=new Array(n); s.floor=new Array(n);
+  for(let y=0;y<s.H;y++) for(let x=0;x<s.W;x++){
+    const c=s.grid[y][x], i=y*s.W+x;
+    s.solid[i]=SOLID.includes(c)?1:0;
+    s.cell[i]=WALL_TEX[c]||'brick';
+    s.floor[i]=FLOOR_TEX[c]||(s.outdoor?'dirt':'boards');
+  }
+  bake(s);
+}
+function los(s,ax,ay,bx,by){
+  const dx=bx-ax,dy=by-ay,n=Math.ceil(Math.hypot(dx,dy)*2.2);
+  for(let k=1;k<n;k++){ const t=k/n, cx=(ax+dx*t)|0, cy=(ay+dy*t)|0;
+    if(cx<0||cy<0||cx>=s.W||cy>=s.H||s.solid[cy*s.W+cx]) return false; }
+  return true;
+}
+function bake(s){
+  s.lm=new Float32Array(s.W*s.H).fill(s.ambient);
+  for(const L of s.lights){
+    if(L.off) continue;
+    const reach=Math.sqrt(L.p/0.02/Math.max(L.f,.01))+2;
+    const pw = L.p * (L.natural ? Math.min(1.4, s._presetAmb ?? 1) : 1);
+    for(let y=Math.max(0,(L.y-reach)|0); y<=Math.min(s.H-1,(L.y+reach)|0); y++)
+    for(let x=Math.max(0,(L.x-reach)|0); x<=Math.min(s.W-1,(L.x+reach)|0); x++){
+      const i=y*s.W+x; if(s.solid[i]) continue;
+      const d2=(x+.5-L.x)**2+(y+.5-L.y)**2, v=pw/(1+d2*L.f);
+      if(v<0.012 || !los(s,L.x,L.y,x+.5,y+.5)) continue;
+      s.lm[i]+=v;
+    }
+  }
+}
+const LIGHTING={
+  day:  {name:'Day',  amb:1.05, indoor:.85, sky:[132,150,164], exp:1.0},
+  dusk: {name:'Dusk', amb:.62,  indoor:.52, sky:[64,74,88],    exp:1.0},
+  night:{name:'Night',amb:.30,  indoor:.14, sky:[16,20,28],    exp:1.0},
+};
+Object.values(SECTORS).forEach(s=>{ s.ambBase=s.ambient; });
+function applyPreset(k){
+  const p=LIGHTING[k]; S.preset=k; S.light=p;
+  for(const id in SECTORS){ const s=SECTORS[id];
+    s._presetAmb = p.amb;
+    s.ambient = s.outdoor ? p.amb : Math.max(s.ambBase*p.indoor*1.6, p.amb*p.indoor);
+    pack(s);
+  }
+}
+Object.values(SECTORS).forEach(pack);
+
+/* ── State ────────────────────────────────────────────────────────────── */
+const HEROES={
+  dean:{name:'Dean',phil:'absurdism',attack:'shotgun',ammo:12,torch:3.4,walk:2.3},
+  sam: {name:'Sam', phil:'humanism', attack:'exorcism',ammo:6, torch:2.9,walk:2.1},
+};
+const S={hero:'dean',cfg:HEROES.dean,sector:null,px:0,py:0,dirX:1,dirY:0,plX:0,plY:FOVP,
+ vx:0,vy:0,angle:0,pitch:0,posZ:0,bob:0,hp:100,ammo:12,muzzle:0,channel:0,chTarget:null,
+ torchOn:false,battery:100,flicker:1,driving:null,highBeam:false,
+ preset:'dusk',light:LIGHTING.dusk,ascii:0,running:false,time:0,transition:0,pending:null,
+ mapOpen:false,obj:0,flags:{},seenT:0};
+
+/* ── Rendering ────────────────────────────────────────────────────────── */
+let coneLut=new Float32Array(IW);
+function beamSetup(){
+  let power=0,width=.55,fall=.055;
+  if(S.driving){ power=S.highBeam?3.6:2.3; width=S.highBeam?.95:.7; fall=S.highBeam?.016:.03; }
+  else if(S.torchOn&&S.battery>0){ power=S.cfg.torch*S.flicker; width=.52; fall=.048; }
+  power+=S.muzzle*5;
+  if(S.muzzle>0) width=Math.max(width,1);
+  for(let x=0;x<IW;x++){ const c=Math.abs(2*x/IW-1)/width;
+    coneLut[x]= c>=1?0:(1-c*c)*power; }
+  return fall;
+}
+function lightAt(s,x,y){ const cx=x|0,cy=y|0;
+  return (cx<0||cy<0||cx>=s.W||cy>=s.H)?s.ambient:s.lm[cy*s.W+cx]; }
+
+let dsArr=new Int32Array(IW), deArr=new Int32Array(IW);
+const skyRow=new Uint32Array(4);
+
+function render(){
+  const s=S.sector, hz=(IH/2+S.pitch)|0;
+  const beamFall=beamSetup();
+  const sky=S.light.sky, exp=S.light.exp;
+  const SW=s.W, SH=s.H, lm=s.lm, solid=s.solid, cell=s.cell, floorMap=s.floor;
+
+  /* Sky is a per-row gradient, filled in one pass. Interiors get a real cast
+     ceiling in pass 3. */
+  if(s.outdoor){
+    /* Precompute the gradient per row, including its four dither phases, so
+       the palette lookup happens ~400 times a frame instead of once per sky
+       pixel. Writing raw colours here was leaking non-palette values into a
+       frame that is supposed to be 256 colours. */
+    const top=Math.min(hz,IH);
+    for(let y=0;y<top;y++){
+      const t=y/Math.max(1,hz), f=.45+t*.55, base=y*IW, dRow=(y&3)<<2;
+      for(let ph=0;ph<4;ph++){
+        const d=BAYER[ph+dRow]*4.5;
+        let c=rgb(clamp255(sky[0]*f+d),clamp255(sky[1]*f+d),clamp255(sky[2]*(.5+t*.5)+d));
+        skyRow[ph]= MODE.quantise ? quant(c) : c;
+      }
+      for(let x=0;x<IW;x++) fb[base+x]=skyRow[x&3];
+    }
+  }
+
+  /* ── Pass 1: walls, column-major (a ray is a column) ── */
+  for(let x=0;x<IW;x++){
+    const cam=2*x/IW-1;
+    const rdx=S.dirX+S.plX*cam||1e-9, rdy=S.dirY+S.plY*cam||1e-9;
+
+    let mx=S.px|0,my=S.py|0;
+    const ddx=rdx<0?-1/rdx:1/rdx, ddy=rdy<0?-1/rdy:1/rdy;
+    let sdx,sdy,stx,sty;
+    if(rdx<0){stx=-1;sdx=(S.px-mx)*ddx;} else {stx=1;sdx=(mx+1-S.px)*ddx;}
+    if(rdy<0){sty=-1;sdy=(S.py-my)*ddy;} else {sty=1;sdy=(my+1-S.py)*ddy;}
+    let side=0,ti='brick',guard=0,open=(S.py|0)*SW+(S.px|0),emit=0;
+    while(guard++<220){
+      if(sdx<sdy){sdx+=ddx;mx+=stx;side=0;} else {sdy+=ddy;my+=sty;side=1;}
+      if(mx<0||my<0||mx>=SW||my>=SH){ti='brick';break;}
+      const i=my*SW+mx;
+      if(solid[i]){ ti=cell[i]; emit=EMIT[s.grid[my][mx]]||0; break; }
+      open=i;
+    }
+    let dist=side===0?sdx-ddx:sdy-ddy; if(dist<.04) dist=.04;
+    zbuf[x]=dist;
+
+    let wx=side===0?S.py+dist*rdy:S.px+dist*rdx; wx-=Math.floor(wx);
+    const tw=T[ti], texU=((wx*tw.w)|0)&(tw.w-1);
+    const lineH=(IH/dist)|0, zo=S.posZ/dist;
+    const dS=(-lineH/2+hz+zo)|0, dE=(lineH/2+hz+zo)|0;
+    dsArr[x]=dS; deArr[x]=dE;
+
+    let ill=(lm[open]+coneLut[x]/(1+dist*dist*beamFall))*exp;
+    if(side===1) ill*=.76;
+    ill*=Math.max(.18,1-dist/VIEWD*MODE.dim);
+    if(emit) ill=Math.max(ill,emit);
+    const wl=tw.lit[dlvl(ill,x,0)];
+
+    const y0=dS<0?0:dS, y1=dE>IH-1?IH-1:dE;
+    const stepV=tw.h/lineH;
+    let texPos=(y0-dS)*stepV;
+    let di=y0*IW+x;
+    for(let y=y0;y<=y1;y++,di+=IW){
+      let tv=texPos|0; if(tv>=tw.h) tv=tw.h-1;
+      fb[di]=wl[tv*tw.w+texU];
+      texPos+=stepV;
+    }
+  }
+
+  /* ── Passes 2 and 3: floor and ceiling, row-major ──
+     Everything that depends only on the row — distance, haze, the beam's
+     distance term, the texture step across the row — is computed once per
+     row, and the sample position advances by a constant increment across it.
+     Doing this column-major meant recomputing a divide per pixel. */
+  const rdx0=S.dirX-S.plX, rdy0=S.dirY-S.plY;
+  const rdxSpan=(S.dirX+S.plX)-rdx0, rdySpan=(S.dirY+S.plY)-rdy0;
+  const halfH=0.5*IH;
+
+  for(let y=hz+1;y<IH;y++){
+    const rd=(halfH+S.posZ)/(y-hz);
+    if(rd<=0) continue;
+    let fx=S.px+rd*rdx0, fy=S.py+rd*rdy0;
+    const sx=rd*rdxSpan/IW, sy=rd*rdySpan/IW;
+    const rowLight=exp*Math.max(.18,1-rd/VIEWD*MODE.dim);
+    const rowBeam=1/(1+rd*rd*beamFall);
+    const dRow=(y&3)<<2, base=y*IW;
+    for(let x=0;x<IW;x++,fx+=sx,fy+=sy){
+      if(y<=deArr[x]) continue;                       // wall already owns it
+      const cx=fx|0, cy=fy|0;
+      const inside=cx>=0&&cy>=0&&cx<SW&&cy<SH;
+      const ft=T[inside?floorMap[cy*SW+cx]:(s.outdoor?'dirt':'boards')];
+      const fi=((inside?lm[cy*SW+cx]:s.ambient)+coneLut[x]*rowBeam)*rowLight;
+      const l=lvl(fi+DITH[(x&3)+dRow]);
+      fb[base+x]=ft.lit[l][(((fy*ft.h)|0)&(ft.h-1))*ft.w+(((fx*ft.w)|0)&(ft.w-1))];
+    }
+  }
+
+  if(!s.outdoor){
+    const ct=T.plaster, cw=ct.w, chh=ct.h;
+    for(let y=0;y<hz;y++){
+      const rd=(halfH-S.posZ)/(hz-y);
+      if(rd<=0) continue;
+      let fx=S.px+rd*rdx0, fy=S.py+rd*rdy0;
+      const sx=rd*rdxSpan/IW, sy=rd*rdySpan/IW;
+      const rowLight=exp*Math.max(.18,1-rd/VIEWD*MODE.dim)*.82;
+      const rowBeam=.55/(1+rd*rd*beamFall);
+      const dRow=(y&3)<<2, base=y*IW;
+      for(let x=0;x<IW;x++,fx+=sx,fy+=sy){
+        if(y>=dsArr[x]) continue;                     // wall already owns it
+        const cx=fx|0, cy=fy|0;
+        const inside=cx>=0&&cy>=0&&cx<SW&&cy<SH;
+        const ci=((inside?lm[cy*SW+cx]:s.ambient)+coneLut[x]*rowBeam)*rowLight;
+        const l=lvl(ci+DITH[(x&3)+dRow]);
+        fb[base+x]=ct.lit[l][(((fy*chh)|0)&(chh-1))*cw+(((fx*cw)|0)&(cw-1))];
+      }
+    }
+  }
+
+  /* sprites, far to near, per-column z-tested */
+  const ents=s.entities.filter(e=>e!==S.driving&&!e.dead)
+    .sort((a,b)=>((b.x-S.px)**2+(b.y-S.py)**2)-((a.x-S.px)**2+(a.y-S.py)**2));
+  for(const e of ents) drawSprite(e,s,hz,beamFall);
+}
+
+function drawSprite(e,s,hz,beamFall){
+  const sp=SPR[e.m]; if(!sp) return;
+  const dx=e.x-S.px, dy=e.y-S.py;
+  const inv=1/(S.plX*S.dirY-S.dirX*S.plY);
+  const tx=inv*(S.dirY*dx-S.dirX*dy), ty=inv*(-S.plY*dx+S.plX*dy);
+  if(ty<=.12) return;
+
+  const scrX=((IW/2)*(1+tx/ty))|0;
+  const h=Math.abs((IH/ty)*(e.h||1.85)/1.85)|0;
+  const w=(h*(sp.w/sp.h))|0;
+  if(h<2||w<1) return;
+  const hov=e.hover?Math.sin(S.time*1.6+e.x)*.08:0;
+  const ground=(hz+(IH/ty)/2+S.posZ/ty)|0 + (hov*h|0);
+  const top=ground-h;
+
+  const beam=coneLut[Math.max(0,Math.min(IW-1,scrX))];
+  let ill=(lightAt(s,e.x,e.y)+beam/(1+ty*ty*beamFall))*S.light.exp;
+  ill*=Math.max(.18,1-ty/VIEWD*MODE.dim);
+  if(e.emit) ill=Math.max(ill,e.emit);
+  const px=sp.lit[lvl(ill)];
+
+  const x0=Math.max(0,scrX-(w>>1)), x1=Math.min(IW-1,scrX+(w>>1));
+  for(let x=x0;x<=x1;x++){
+    if(ty>=zbuf[x]) continue;
+    const u=(((x-(scrX-(w>>1)))*sp.w/w)|0);
+    if(u<0||u>=sp.w) continue;
+    const yStart=Math.max(0,top), yEnd=Math.min(IH-1,ground-1);
+    for(let y=yStart;y<=yEnd;y++){
+      const v=(((y-top)*sp.h/h)|0);
+      if(v<0||v>=sp.h) continue;
+      const c=px[v*sp.w+u];
+      if(c===0) continue;                       // transparent
+      fb[y*IW+x]=c;
+    }
+  }
+}
+
+/* ── The ASCII pass, now a post-process ───────────────────────────────────
+   Reads back the rendered frame and resolves 6×10 blocks to glyphs. At
+   amount 1 this is the old renderer's look; between 0 and 1 it dissolves
+   patches of the world into text, which is what Act III should do to you. */
+const RAMP=" .,:;-~=+*#%&@$";
+const CW=6, CH=10;
+function asciiPass(amount){
+  const cols=(IW/CW)|0, rows=(IH/CH)|0;
+  const sw=over.width, sh=over.height;
+  const sx=sw/IW, sy=sh/IH;
+  octx.clearRect(0,0,sw,sh);
+  octx.font=`${Math.round(CH*sy)}px ${getComputedStyle(document.body).fontFamily}`;
+  octx.textBaseline='top';
+  for(let cy=0;cy<rows;cy++){
+    for(let cx=0;cx<cols;cx++){
+      if(amount<1 && noise(cx,cy+((S.time*3)|0))>amount) continue;
+      let r=0,g=0,b=0;
+      for(let y=0;y<CH;y+=2) for(let x=0;x<CW;x+=2){
+        const c=fb[(cy*CH+y)*IW+cx*CW+x];
+        r+=c&255; g+=(c>>8)&255; b+=(c>>16)&255;
+      }
+      const n=(CH/2)*(CW/2); r/=n; g/=n; b/=n;
+      const lum=(r*.30+g*.59+b*.11)/255;
+      octx.fillStyle=`rgb(${r|0},${g|0},${b|0})`;
+      octx.fillRect(cx*CW*sx, cy*CH*sy, CW*sx+1, CH*sy+1);
+      const ch=RAMP[Math.min(RAMP.length-1,(lum*RAMP.length)|0)];
+      if(ch===' ') continue;
+      octx.fillStyle=`rgb(${Math.min(255,r*1.9)|0},${Math.min(255,g*1.9)|0},${Math.min(255,b*1.9)|0})`;
+      octx.fillText(ch, cx*CW*sx, cy*CH*sy);
+    }
+  }
+}
+
+function present(){
+  wctx.putImageData(img,0,0);
+  if(S.ascii>0) asciiPass(S.ascii); else octx.clearRect(0,0,over.width,over.height);
+  if(S.mapOpen) drawFullMap(); else if(S.running) drawMinimap();
+}
+
+/* ── Physics, input, driving, combat ──────────────────────────────────── */
+const PR=.26;
+function solidAt(s,x,y){ return (x<0||y<0||x>=s.W||y>=s.H)?1:s.solid[y*s.W+x]; }
+function hits(s,x,y,r){
+  for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+    const cx=(x|0)+dx, cy=(y|0)+dy;
+    if(!solidAt(s,cx,cy)) continue;
+    const nx=Math.max(cx,Math.min(x,cx+1)), ny=Math.max(cy,Math.min(y,cy+1));
+    if((x-nx)**2+(y-ny)**2<r*r) return true;
+  } return false;
+}
+function move(s,x,y,nx,ny,r){
+  let ox=x,oy=y;
+  if(!hits(s,nx,oy,r)) ox=nx;
+  if(!hits(s,ox,ny,r)) oy=ny;
+  return [ox,oy];
+}
+const keys={};
+addEventListener('keydown',e=>{
+  if(!keys[e.code]) keys['1'+e.code]=true;
+  keys[e.code]=true;
+  if(['Space','Tab','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+  if(dlgOpen){ dlgKey(e); return; }
+  if(e.code==='Tab'){ S.ascii=S.ascii>0?0:1; toast(S.ascii?'ASCII post-pass':'Pixel renderer'); }
+  if(e.code==='KeyM'){ S.mapOpen=!S.mapOpen; if(S.mapOpen) document.exitPointerLock?.(); }
+  if(e.code==='KeyP'){
+    const o=Object.keys(PIXEL_MODES);
+    const nx=o[(o.indexOf(S.pmode)+1)%o.length];
+    S.pmode=nx; setPixelMode(nx); toast(PIXEL_MODES[nx].name);
+  }
+  if(e.code==='KeyE') interact();
+  if(e.code==='KeyF'){ if(S.battery>0){S.torchOn=!S.torchOn; toast(S.torchOn?'Torch on':'Torch off');} }
+  if(e.code==='KeyH'&&S.driving){ S.highBeam=!S.highBeam; toast(S.highBeam?'High beams':'Low beams'); }
+  if(e.code==='KeyL'){ const o=['night','dusk','day'];
+    applyPreset(o[(o.indexOf(S.preset)+1)%o.length]); toast(S.light.name); }
+});
+addEventListener('keyup',e=>keys[e.code]=false);
+world.parentElement.addEventListener('click',()=>{ if(S.running&&!dlgOpen) over.requestPointerLock(); });
+addEventListener('mousemove',e=>{
+  if(document.pointerLockElement===over&&!dlgOpen){
+    if(S.driving) S.angle+=e.movementX*.0008;
+    else {
+      S.angle+=e.movementX*.0022;
+      if(MODE.pitch==='shear') S.pitch=Math.max(-IH*.28,Math.min(IH*.28,S.pitch-e.movementY*.5));
+      else S.pitch=0;                      // Doom could not look up or down
+    }
+  }
+});
+
+function step(s,e,tx,ty,sp,dt){
+  const dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy)||1;
+  const [mx,my]=move(s,e.x,e.y,e.x+dx/d*sp*dt,e.y+dy/d*sp*dt,e.r);
+  if(mx===e.x&&my===e.y) e.tx=null;
+  e.x=mx; e.y=my;
+}
+function updatePlayer(dt){
+  const s=S.sector;
+  if(S.driving){
+    const car=S.driving;
+    const th=(keys.KeyW?1:0)-(keys.KeyS?1:0), st=(keys.KeyD?1:0)-(keys.KeyA?1:0);
+    car.speed+=th*7*dt; car.speed*=Math.pow(.55,dt);
+    car.speed=Math.max(-3.5,Math.min(11,car.speed));
+    car.heading+=st*dt*1.5*Math.min(1,Math.abs(car.speed)/3)*Math.sign(car.speed||1);
+    S.angle=car.heading;
+    const [mx,my]=move(s,car.x,car.y,car.x+Math.cos(car.heading)*car.speed*dt,
+                                     car.y+Math.sin(car.heading)*car.speed*dt,car.r);
+    if(mx===car.x&&my===car.y&&Math.abs(car.speed)>2){ toast('Into a wall'); car.speed*=-.25; }
+    car.x=mx; car.y=my; S.px=car.x; S.py=car.y; S.posZ=-8;
+    return;
+  }
+  const run=keys.ShiftLeft||keys.ShiftRight;
+  const maxV=run?S.cfg.walk*1.6:S.cfg.walk;
+  let ix=0,iy=0;
+  if(keys.KeyW) iy++; if(keys.KeyS) iy--; if(keys.KeyD) ix++; if(keys.KeyA) ix--;
+  const l=Math.hypot(ix,iy)||1; ix/=l; iy/=l;
+  S.vx+=(S.dirX*iy-S.dirY*ix)*(run?26:16)*dt;
+  S.vy+=(S.dirY*iy+S.dirX*ix)*(run?26:16)*dt;
+  const d=Math.pow(.0016,dt); S.vx*=d; S.vy*=d;
+  const sp=Math.hypot(S.vx,S.vy);
+  if(sp>maxV){ S.vx=S.vx/sp*maxV; S.vy=S.vy/sp*maxV; }
+  const [nx,ny]=move(s,S.px,S.py,S.px+S.vx*dt,S.py+S.vy*dt,PR);
+  if(nx===S.px) S.vx=0; if(ny===S.py) S.vy=0;
+  S.px=nx; S.py=ny;
+  S.bob+=sp*dt*7; S.posZ=Math.sin(S.bob)*sp*5;
+  if((ix||iy)&&S.channel>0){ S.channel=0; S.chTarget=null; toast('The rite breaks — you moved'); }
+}
+function updateEntities(dt){
+  const s=S.sector;
+  for(const e of s.entities){
+    if(e.dead) continue;
+    if(e.kind==='car'){
+      const [tx,ty]=e.route[e.node];
+      const dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy);
+      if(d<.35){ e.node=(e.node+1)%e.route.length; continue; }
+      e.heading=Math.atan2(dy,dx);
+      e.x+=dx/d*e.speed*dt; e.y+=dy/d*e.speed*dt;
+    } else if(e.kind==='walker'){
+      if(!e.tx||Math.hypot(e.tx-e.x,e.ty-e.y)<.4){
+        e.tx=e.x+(Math.random()-.5)*12; e.ty=e.y+(Math.random()-.5)*12; }
+      step(s,e,e.tx,e.ty,e.speed,dt);
+    }
+  }
+}
+function aimed(maxD,minDot){
+  const s=S.sector; let best=null,bd=1e9;
+  for(const e of s.entities){
+    if(e.dead||e.kind==='prop'||e.kind==='vehicle'||e.kind==='car') continue;
+    const dx=e.x-S.px,dy=e.y-S.py,d=Math.hypot(dx,dy);
+    if(d>maxD||(dx/d)*S.dirX+(dy/d)*S.dirY<minDot) continue;
+    if(d<bd){bd=d;best=e;}
+  }
+  return best;
+}
+function updateAttack(dt){
+  if(S.cfg.attack==='shotgun'){
+    if(keys['1Space']){ keys['1Space']=false;
+      if(S.ammo<=0) toast('Dry');
+      else { S.ammo--; S.muzzle=.3;
+        const t=aimed(9,.86);
+        if(t){ t.hp=(t.hp||40)-38;
+          if(t.hp<=0){ t.dead=true; toast('It scatters — and something drinks what is left'); }
+          else toast('Hit'); } } }
+  } else {
+    const t=aimed(7,.9);
+    if(keys.Space&&t&&t.etype){
+      if(S.chTarget!==t){ S.chTarget=t; S.channel=0; toast('Exorcizamus te...'); }
+      S.channel+=dt/2.2;
+      if(S.channel>=1){ S.channel=0; S.chTarget=null; t.dead=true;
+        toast('It lets go'); }
+    } else if(S.channel>0){ S.channel=0; S.chTarget=null; }
+  }
+  if(S.muzzle>0) S.muzzle=Math.max(0,S.muzzle-dt*2.6);
+}
+function interact(){
+  const s=S.sector;
+  if(S.driving){
+    if(Math.abs(S.driving.speed)>1.2){ toast('Slow down first'); return; }
+    const c=S.driving; S.driving=null; S.posZ=0; S.highBeam=false;
+    const nx=c.x+Math.cos(c.heading+Math.PI/2)*1.3, ny=c.y+Math.sin(c.heading+Math.PI/2)*1.3;
+    if(!hits(s,nx,ny,PR)){ S.px=nx; S.py=ny; }
+    toast('Out of the car'); return;
+  }
+  for(const e of s.entities){
+    if(e.dead) continue;
+    const dx=e.x-S.px,dy=e.y-S.py,d=Math.hypot(dx,dy);
+    if(d>2.4||(dx/d)*S.dirX+(dy/d)*S.dirY<.5) continue;
+    if(e.kind==='vehicle'){ S.driving=e; e.heading=S.angle; S.posZ=-8;
+      toast('Impala — W/S throttle, A/D steer, H beams'); return; }
+    if(e.dialogue){ openDlg(e.dialogue); return; }
+  }
+  for(let t=.2;t<2;t+=.12){
+    const cx=(S.px+S.dirX*t)|0, cy=(S.py+S.dirY*t)|0;
+    const tile=s.grid[cy]?.[cx];
+    if(tile==='+'){ const d=s.doors[`${cx},${cy}`];
+      if(d){ S.transition=.7; S.pending=d; } return; }
+    if(tile==='T'){ if(!S.flags.term){ S.flags.term=true; toast('Fragment recovered'); } return; }
+    if(SOLID.includes(tile||'#')) return;
+  }
+}
+function enter(id,x,y,a){
+  S.sector=SECTORS[id]; S.px=x; S.py=y; S.angle=a; S.vx=S.vy=0; S.pitch=0;
+  document.querySelector('#gLoc span').textContent=SECTORS[id].name;
+}
+
+/* ── Dialogue ─────────────────────────────────────────────────────────── */
+const DIALOGUE={
+ marla:{start:'m0',nodes:{
+  m0:{speaker:'Marla — night clerk',
+   text:"You're not from the bank and you're not from the state, so I'll guess press. Third lot this month.\n\nCheckout's eleven. Ice machine's been broke since the mill closed, which tells you about how long that's been.",
+   choices:[{text:"We're looking into the deaths. Six men in five weeks.",next:'m1'},
+            {text:"What happened to this town, Marla?",next:'m2'}]},
+  m1:{speaker:'Marla — night clerk',
+   text:"Deaths. That's a polite word for it.\n\nThey were mill men, every one. Got told the plant was losing money and they believed it, because what else do you do. Then the severance ran out.\n\nRay Hollis bought a boat in March. By April he wouldn't cross the lot after dark — said the streetlights were watching him wrong.",
+   choices:[{text:"Who bought the mill?",next:'m3'}]},
+  m2:{speaker:'Marla — night clerk',
+   text:"Same as every town like this one. Somebody in a building I'll never see decided we cost more than we made.\n\nThe rest is just weather.",
+   choices:[{text:"That's not weather. That's a decision somebody signed.",next:'m1'}]},
+  m3:{speaker:'Marla — night clerk',
+   text:"Crossroads Holdings. Delaware address, and the address is a mailbox. Bought it profitable and ran it into the dirt in eleven months. Took the machines, left the asbestos.\n\nEast end, past the cross street. Chain's been cut since February.\n\nTake the flashlight. It's dark out there in a way it didn't used to be.",
+   choices:[{text:"Thanks, Marla.",next:null,fx:{battery:40,flag:'marla'}}]},
+ }},
+ phantom:{start:'p0',nodes:{
+  p0:{speaker:'The shape on the green chain',
+   text:"A man made of sawdust and standing oil. Where his lungs were, the air will not hold still.\n\n\"QUOTA,\" he says, and the word arrives inside your teeth instead of through the air. \"QUOTA. THE VENT WAS ON THE FORM.\"",
+   choices:[{text:"Which vent? Say the number.",next:'p1'},
+            {text:"[Put it down. It's already dead.]",next:'p2'}]},
+  p1:{speaker:'The shape on the green chain',
+   text:"He stops. The oil on him goes still.\n\n\"FOURTEEN. VENT FOURTEEN. I FILED IT IN MARCH. THEY SAID IT WAS CAPITAL EXPENDITURE.\"\n\nHe checks his own hands, like he's making sure they're still on the form.",
+   choices:[{text:"They killed you with a spreadsheet. I know. Go.",next:'p3'}]},
+  p2:{speaker:'—',
+   text:"Rock salt takes him across the chest and he comes apart like a struck bag of flour.\n\nHe doesn't scream. He says \"THANK\" and the second word is eaten by a seam in the air that should not be there.",
+   choices:[{text:"[Note the tear.]",next:null,fx:{flag:'phantom'}}]},
+  p3:{speaker:'—',
+   text:"He goes out like a pilot light. No violence in it at all.\n\nThen the empty air where he stood puckers, drinks the last of him, and closes wet.\n\nSomething is eating the dead here. Salting the bones was never going to be enough.",
+   choices:[{text:"[Note the tear.]",next:null,fx:{flag:'phantom'}}]},
+ }},
+};
+let dlgOpen=false,dlgTree=null,dlgAvail=null;
+const elDlg=document.getElementById('dlg'), elSpk=document.getElementById('spk'),
+      elLine=document.getElementById('line'), elCh=document.getElementById('ch');
+function openDlg(id){ dlgTree=DIALOGUE[id]; if(!dlgTree) return;
+  dlgOpen=true; document.exitPointerLock?.(); elDlg.classList.add('on'); showNode(dlgTree.start); }
+function showNode(n){
+  if(!n){ dlgOpen=false; elDlg.classList.remove('on'); return; }
+  const nd=dlgTree.nodes[n];
+  elSpk.textContent=nd.speaker; elLine.textContent=nd.text; elCh.innerHTML='';
+  dlgAvail=nd.choices;
+  nd.choices.forEach((c,i)=>{
+    const b=document.createElement('button');
+    b.className='c'; b.dataset.k=`${i+1}.`; b.textContent=c.text;
+    b.onclick=()=>pick(c); elCh.appendChild(b);
+  });
+  elCh.firstChild?.focus();
+}
+function pick(c){
+  if(c.fx?.battery) S.battery=Math.min(100,S.battery+c.fx.battery);
+  if(c.fx?.flag) S.flags[c.fx.flag]=true;
+  showNode(c.next);
+}
+function dlgKey(e){
+  const i=['Digit1','Digit2','Digit3','Digit4'].indexOf(e.code);
+  if(i>=0&&dlgAvail?.[i]){ e.preventDefault(); pick(dlgAvail[i]); }
+  if(e.code==='Escape'){ dlgOpen=false; elDlg.classList.remove('on'); }
+}
+
+/* ═══ Objectives and cartography ═══════════════════════════════════════════
+   Points of interest are authored per sector; the objective list drives which
+   one is highlighted. When the target is in another sector, routing falls back
+   to the door you need to take, so the marker is always something reachable
+   from where you are standing rather than an arrow into a wall. */
+
+SECTORS.street.pois=[
+  {x:12.5,y:30.5,name:'Motel office',kind:'door'},
+  {x:45.5,y:31.5,name:'Mill office',kind:'door'},
+  {x:29.0,y:40.0,name:'The Impala',kind:'car'},
+  {x:21.5,y:11.5,name:'Terminal',kind:'term'},
+  {x:27.5,y:22.5,name:'Cross street',kind:'note'},
+];
+SECTORS.motel.pois=[
+  {x:9.5,y:4.0,name:'Marla',kind:'npc'},
+  {x:10.5,y:14.5,name:'Out to the street',kind:'door'},
+];
+SECTORS.mill.pois=[
+  {x:15.5,y:8.0,name:'The green chain',kind:'npc'},
+  {x:24.5,y:6.5,name:'Terminal',kind:'term'},
+  {x:14.5,y:21.5,name:'Out to the street',kind:'door'},
+];
+
+const OBJECTIVES=[
+  {id:'ask', title:'Find someone who was here',
+   detail:'The motel is the only lit window on the street. Somebody has been signing people in all year.',
+   sector:'motel', x:9.5, y:4.0, done:()=>S.flags.marla},
+  {id:'mill', title:'Search the mill floor',
+   detail:'East end, past the cross street. Marla says the chain has been cut since February.',
+   sector:'mill', x:15.5, y:8.0, done:()=>S.flags.phantom},
+  {id:'term', title:'Whatever Ray was writing, find more of it',
+   detail:'The mill office terminal was still drawing power. It should not have been.',
+   sector:'mill', x:23.0, y:7.5, done:()=>S.flags.term},
+  {id:'car', title:'Get back to the Impala',
+   detail:'Nothing about this is a salt-and-burn any more. Regroup.',
+   sector:'street', x:29.0, y:40.0, done:()=>!!S.driving},
+];
+S.obj=0; S.flags={};
+
+function objective(){ return OBJECTIVES[S.obj]||null; }
+function checkObjective(){
+  const o=objective();
+  if(o&&o.done()){
+    S.obj++;
+    const nx=objective();
+    toast(nx?('Objective: '+nx.title):'Act I complete');
+  }
+}
+/* Breadth-first over the door graph: which door in the sector I'm standing in
+   leads toward the sector I need? */
+function routeDoor(from,to){
+  if(from===to) return null;
+  const prev={}; prev[from]=null; const q=[from];
+  while(q.length){
+    const cur=q.shift();
+    for(const k in SECTORS[cur].doors){
+      const d=SECTORS[cur].doors[k];
+      if(d.to in prev) continue;
+      prev[d.to]={from:cur,key:k}; q.push(d.to);
+    }
+  }
+  if(!(to in prev)) return null;
+  let node=to;
+  while(prev[node]&&prev[node].from!==from) node=prev[node].from;
+  return prev[node]?prev[node].key:null;
+}
+/* Where the marker should sit, in the current sector's coordinates. */
+function markerHere(){
+  const o=objective(); if(!o) return null;
+  const cur=S.sector.id;
+  if(o.sector===cur) return {x:o.x,y:o.y,label:o.title,direct:true};
+  const key=routeDoor(cur,o.sector);
+  if(!key) return null;
+  const [dx,dy]=key.split(',').map(Number);
+  return {x:dx+0.5,y:dy+0.5,label:'This way',direct:false};
+}
+
+/* Explored memory, per sector. Marked on a timer rather than per frame — the
+   player cannot outrun a 12 Hz update at walking speed. */
+function markSeen(){
+  const s=S.sector;
+  if(!s.seen) s.seen=new Uint8Array(s.W*s.H);
+  const R=7, px=S.px|0, py=S.py|0;
+  for(let y=Math.max(0,py-R);y<=Math.min(s.H-1,py+R);y++)
+    for(let x=Math.max(0,px-R);x<=Math.min(s.W-1,px+R);x++){
+      if((x-px)**2+(y-py)**2>R*R) continue;
+      if(los(s,S.px,S.py,x+.5,y+.5)||Math.abs(x-px)+Math.abs(y-py)<=2) s.seen[y*s.W+x]=1;
+    }
+}
+
+const POI_GLYPH={door:'▯',car:'▬',term:'▮',npc:'●',note:'·'};
+const POI_COL  ={door:'#d9a441',car:'#9aa6ad',term:'#18c866',npc:'#e0d3bd',note:'#5d6b73'};
+
+/* One routine draws both the corner minimap and the full-screen map; they
+   differ only in scale, framing, and whether labels are worth the space. */
+function drawMap(ctx2,ox,oy,w,h,cell,centred,labels){
+  const s=S.sector, seen=s.seen;
+  const cx = centred ? S.px : s.W/2;
+  const cy = centred ? S.py : s.H/2;
+  const originX = ox + w/2 - cx*cell;
+  const originY = oy + h/2 - cy*cell;
+
+  ctx2.save();
+  ctx2.beginPath(); ctx2.rect(ox,oy,w,h); ctx2.clip();
+  ctx2.fillStyle='rgba(6,8,10,0.86)'; ctx2.fillRect(ox,oy,w,h);
+
+  for(let y=0;y<s.H;y++) for(let x=0;x<s.W;x++){
+    const i=y*s.W+x;
+    if(seen&&!seen[i]) continue;
+    const px=originX+x*cell, py=originY+y*cell;
+    if(px+cell<ox||py+cell<oy||px>ox+w||py>oy+h) continue;
+    const ch=s.grid[y][x];
+    if(SOLID.includes(ch)){
+      ctx2.fillStyle = ch==='+' ? '#d9a441' : ch==='T' ? '#18c866' : '#55636b';
+    } else {
+      ctx2.fillStyle = ch==='.' ? '#1b2226' : ch===',' ? '#232c31' : '#161d21';
+    }
+    ctx2.fillRect(px,py,Math.ceil(cell),Math.ceil(cell));
+  }
+
+  const mk=markerHere();
+  if(mk){
+    const px=originX+mk.x*cell, py=originY+mk.y*cell;
+    const pulse=0.55+0.45*Math.sin(S.time*4);
+    ctx2.strokeStyle=`rgba(217,164,65,${pulse.toFixed(2)})`;
+    ctx2.lineWidth=Math.max(1.5,cell*0.22);
+    ctx2.beginPath(); ctx2.arc(px,py,cell*1.5,0,Math.PI*2); ctx2.stroke();
+    ctx2.fillStyle='#d9a441';
+    ctx2.beginPath(); ctx2.arc(px,py,Math.max(1.5,cell*0.42),0,Math.PI*2); ctx2.fill();
+  }
+
+  if(labels&&s.pois){
+    ctx2.font=`${Math.max(9,cell*1.5)}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx2.textBaseline='middle';
+    for(const p of s.pois){
+      if(seen&&!seen[(p.y|0)*s.W+(p.x|0)]) continue;
+      const px=originX+p.x*cell, py=originY+p.y*cell;
+      ctx2.fillStyle=POI_COL[p.kind]||'#8b95a0';
+      ctx2.fillText(POI_GLYPH[p.kind]||'·',px-cell*0.5,py);
+      ctx2.fillStyle='#a5b0b8';
+      ctx2.fillText(p.name,px+cell*1.2,py);
+    }
+  } else if(s.pois){
+    for(const p of s.pois){
+      if(seen&&!seen[(p.y|0)*s.W+(p.x|0)]) continue;
+      ctx2.fillStyle=POI_COL[p.kind]||'#8b95a0';
+      ctx2.fillRect(originX+p.x*cell-cell*0.4,originY+p.y*cell-cell*0.4,cell*0.9,cell*0.9);
+    }
+  }
+
+  /* player, as a heading triangle */
+  const px=originX+S.px*cell, py=originY+S.py*cell;
+  const a=S.angle, r=Math.max(3,cell*1.1);
+  ctx2.fillStyle='#e6ddcc';
+  ctx2.beginPath();
+  ctx2.moveTo(px+Math.cos(a)*r, py+Math.sin(a)*r);
+  ctx2.lineTo(px+Math.cos(a+2.5)*r*0.8, py+Math.sin(a+2.5)*r*0.8);
+  ctx2.lineTo(px+Math.cos(a-2.5)*r*0.8, py+Math.sin(a-2.5)*r*0.8);
+  ctx2.closePath(); ctx2.fill();
+  ctx2.restore();
+
+  ctx2.strokeStyle='#2a343a'; ctx2.lineWidth=1;
+  ctx2.strokeRect(ox+0.5,oy+0.5,w-1,h-1);
+}
+
+function drawMinimap(){
+  const w=over.width, h=over.height;
+  const size=Math.round(Math.min(w,h)*0.24);
+  const pad=Math.round(size*0.09);
+  drawMap(octx, w-size-pad, pad, size, size, size/22, true, false);
+  const o=objective();
+  if(o){
+    octx.font=`${Math.max(10,Math.round(h*0.021))}px ${getComputedStyle(document.body).fontFamily}`;
+    octx.textBaseline='top'; octx.textAlign='right';
+    octx.fillStyle='#d9a441';
+    octx.fillText(o.title, w-pad, pad+size+6);
+    octx.textAlign='left';
+  }
+}
+
+function drawFullMap(){
+  const w=over.width, h=over.height, s=S.sector;
+  octx.fillStyle='rgba(4,6,7,0.93)'; octx.fillRect(0,0,w,h);
+  const mw=Math.round(w*0.62), mh=Math.round(h*0.80);
+  const mx=Math.round(w*0.05), my=Math.round(h*0.12);
+  const cell=Math.min(mw/s.W, mh/s.H);
+  drawMap(octx, mx, my, mw, mh, cell, false, true);
+
+  const fs=Math.max(11,Math.round(h*0.024));
+  octx.textBaseline='top'; octx.textAlign='left';
+  octx.font=`${Math.round(fs*1.15)}px ${getComputedStyle(document.body).fontFamily}`;
+  octx.fillStyle='#cbbfae';
+  octx.fillText(s.name, mx, Math.round(h*0.05));
+
+  const lx=mx+mw+Math.round(w*0.04);
+  let ly=my;
+  octx.font=`${fs}px ${getComputedStyle(document.body).fontFamily}`;
+  octx.fillStyle='#5d6b73'; octx.fillText('OBJECTIVES', lx, ly); ly+=fs*2;
+  OBJECTIVES.forEach((o,i)=>{
+    const state = i<S.obj ? 'done' : i===S.obj ? 'now' : 'later';
+    octx.fillStyle = state==='done' ? '#3f4a50' : state==='now' ? '#d9a441' : '#7a8790';
+    const mark = state==='done' ? '[x] ' : state==='now' ? '[>] ' : '[ ] ';
+    octx.fillText(mark+o.title, lx, ly); ly+=fs*1.5;
+    if(state==='now'){
+      octx.fillStyle='#8b95a0';
+      wrapText(octx, o.detail, lx+fs, ly, w-lx-fs*2, fs*1.35);
+      ly+=fs*1.35*Math.ceil(measureLines(octx,o.detail,w-lx-fs*2));
+      octx.fillStyle='#5d6b73';
+      octx.fillText('→ '+SECTORS[o.sector].name, lx+fs, ly); ly+=fs*1.6;
+    }
+    ly+=fs*0.4;
+  });
+  ly+=fs;
+  octx.fillStyle='#5d6b73'; octx.fillText('LEGEND', lx, ly); ly+=fs*1.8;
+  for(const [k,label] of [['door','Door'],['npc','Person'],['term','Terminal'],['car','Vehicle']]){
+    octx.fillStyle=POI_COL[k]; octx.fillText(POI_GLYPH[k], lx, ly);
+    octx.fillStyle='#8b95a0'; octx.fillText(label, lx+fs*1.6, ly); ly+=fs*1.4;
+  }
+  octx.fillStyle='#3f4a50';
+  octx.fillText('M to close', lx, my+mh-fs);
+}
+function measureLines(c,text,maxW){
+  const words=text.split(' '); let line='',lines=1;
+  for(const wd of words){
+    if(c.measureText(line+wd+' ').width>maxW && line){ lines++; line=wd+' '; }
+    else line+=wd+' ';
+  }
+  return lines;
+}
+function wrapText(c,text,x,y,maxW,lh){
+  const words=text.split(' '); let line='';
+  for(const wd of words){
+    if(c.measureText(line+wd+' ').width>maxW && line){ c.fillText(line,x,y); y+=lh; line=wd+' '; }
+    else line+=wd+' ';
+  }
+  if(line) c.fillText(line,x,y);
+}
+
+/* ── HUD ──────────────────────────────────────────────────────────────── */
+const elToast=document.getElementById('toast'); let toastT=0;
+function toast(m){ elToast.textContent=m; elToast.classList.add('on'); toastT=2.2; }
+function bar(v,max,w){ const n=Math.round(v/max*w);
+  return '['+'#'.repeat(Math.max(0,n))+'-'.repeat(Math.max(0,w-n))+']'; }
+function hud(dt){
+  const gm=document.getElementById('gMode');
+  gm.querySelector('span').textContent = S.ascii>0 ? 'ASCII post-pass' : MODE.name;
+  gm.className='g'+(S.ascii>0?' on':'');
+  const go=document.getElementById('gObj');
+  const o=objective();
+  go.querySelector('span').textContent = o ? o.title : 'Act I complete';
+  go.className='g'+(o?' on':'');
+  document.querySelector('#gWho span').textContent=`${S.cfg.name} · ${S.cfg.phil}`;
+  const gt=document.getElementById('gTorch');
+  gt.querySelector('span').textContent=S.battery<=0?'dead':bar(S.battery,100,10)+(S.torchOn?' on':' off');
+  gt.className='g'+(S.torchOn?' on':'');
+  document.querySelector('#gArm span').textContent = S.driving
+    ? `driving · ${S.highBeam?'high':'low'} beam · ${Math.abs(S.driving.speed*8)|0} mph`
+    : S.cfg.attack==='shotgun' ? `shotgun · ${S.ammo} shells`
+    : `rite · ${S.channel>0?Math.round(S.channel*100)+'%':'ready'}`;
+  document.querySelector('#gLight span').textContent=S.light.name;
+  if(toastT>0){ toastT-=dt; if(toastT<=0) elToast.classList.remove('on'); }
+}
+
+/* ── Loop ─────────────────────────────────────────────────────────────── */
+function resize(){
+  const r=world.getBoundingClientRect();
+  over.width=Math.max(1,Math.round(r.width)); over.height=Math.max(1,Math.round(r.height));
+}
+addEventListener('resize',resize);
+
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now; S.time+=dt;
+  if(S.running){
+    if(S.transition>0){
+      S.transition-=dt;
+      if(S.transition<=.35&&S.pending){ const d=S.pending; S.pending=null; enter(d.to,d.x,d.y,d.a); }
+    } else if(!dlgOpen&&!S.mapOpen){
+      updatePlayer(dt); updateEntities(dt); updateAttack(dt);
+      S.seenT-=dt;
+      if(S.seenT<=0){ S.seenT=1/12; markSeen(); checkObjective(); }
+      if(S.torchOn){ S.battery=Math.max(0,S.battery-dt*.55);
+        S.flicker=S.battery<22?(.35+Math.random()*.65):1;
+        if(S.battery<=0) S.torchOn=false; }
+    }
+    S.dirX=Math.cos(S.angle); S.dirY=Math.sin(S.angle);
+    S.plX=-S.dirY*FOVP; S.plY=S.dirX*FOVP;
+    render();
+    if(S.transition>0){
+      const a=1-Math.abs(S.transition-.35)/.36;
+      const stat = MODE.quantise ? quant(rgb(8,10,12)) : rgb(8,10,12);
+      for(let i=0;i<IW*IH*a*.5;i++) fb[(Math.random()*IW*IH)|0]=stat;
+    }
+    present(); hud(dt);
+    for(const k in keys) if(k[0]==='1') keys[k]=false;
+  }
+  requestAnimationFrame(frame);
+}
+function begin(h){
+  S.hero=h; S.cfg=HEROES[h]; S.ammo=S.cfg.ammo;
+  document.getElementById('boot').classList.add('off');
+  resize();
+  const s=SECTORS.street; enter('street',s.spawn.x,s.spawn.y,s.spawn.a);
+  S.running=true; over.requestPointerLock?.();
+  toast('Tab switches renderer');
+}
+document.getElementById('pd').onclick=()=>begin('dean');
+document.getElementById('ps').onclick=()=>begin('sam');
+S.pmode='doom';
+applyPreset('dusk'); setPixelMode('doom'); resize();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

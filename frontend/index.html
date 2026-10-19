@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OAKHAVEN — Act I &amp; II</title>
+<style>
+:root{
+  --void:#060708; --oil:#11171a; --fog:#4c585f; --bone:#cbbfae;
+  --rust:#8a4b2a; --sodium:#d9a441; --phosphor:#18c866; --bruise:#4d6f9a;
+  --mono: ui-monospace,"SF Mono","Cascadia Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--void);color:var(--bone);font-family:var(--mono);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;-webkit-font-smoothing:antialiased}
+#cabinet{width:min(97vw,1240px);display:flex;flex-direction:column}
+#viewport{position:relative;background:#000;border:1px solid #1d2529;overflow:hidden}
+#screen{display:block;width:100%;height:auto}
+/* The scanline + vignette pass was eating roughly a third of the contrast.
+   It's lighter now, and G turns it off entirely. */
+#viewport::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,.16) 0 1px,rgba(0,0,0,0) 1px 3px),
+    radial-gradient(ellipse 82% 78% at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.42) 100%);
+  mix-blend-mode:multiply}
+#viewport.flat::after{display:none}
+
+#band{display:flex;border:1px solid #1d2529;border-top:none;
+  background:linear-gradient(#0b1013,#080b0d);font-size:12px}
+.gauge{flex:1;padding:8px 12px;border-right:1px solid #161d21;display:flex;flex-direction:column;gap:3px;min-width:0}
+.gauge:last-child{border-right:none}
+.gauge b{font-weight:400;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#5d6b73}
+.gauge span{white-space:pre;font-size:12.5px;color:var(--fog);transition:color .4s linear;overflow:hidden;text-overflow:ellipsis}
+.gauge.warn span{color:var(--sodium)} .gauge.crit span{color:var(--rust)}
+.gauge.phos span{color:var(--phosphor)} .gauge.cool span{color:var(--bruise)}
+body.sam .gauge.hero span{color:var(--bruise)} body.dean .gauge.hero span{color:var(--rust)}
+
+#dialogue{position:absolute;inset:auto 0 0 0;
+  background:linear-gradient(rgba(6,7,8,0),rgba(6,7,8,.95) 20%,#060708);
+  padding:60px 30px 22px;display:none;flex-direction:column;gap:12px}
+#dialogue.on{display:flex}
+#speaker{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--sodium)}
+#line{font-size:15px;line-height:1.6;max-width:76ch;white-space:pre-wrap}
+#choices{display:flex;flex-direction:column;gap:4px;margin-top:2px}
+.choice{background:none;border:none;color:var(--fog);font:inherit;font-size:13.5px;
+  text-align:left;padding:4px 0 4px 26px;position:relative;cursor:pointer;transition:color .12s}
+.choice::before{content:attr(data-k);position:absolute;left:0;color:#39444a}
+.choice:hover,.choice:focus-visible{color:var(--bone);outline:none}
+.choice:hover::before,.choice:focus-visible::before{color:var(--sodium)}
+.tag{font-size:11px;letter-spacing:.1em}
+.tag.hard{color:var(--rust)} .tag.open{color:var(--bruise)} .tag.cipher{color:var(--phosphor)}
+
+#toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:11px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--sodium);opacity:0;
+  transition:opacity .3s;pointer-events:none;text-shadow:0 0 14px rgba(217,164,65,.45);text-align:center}
+#toast.on{opacity:1}
+#subtitle{position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:13px;
+  color:var(--bone);opacity:0;transition:opacity .6s;pointer-events:none;padding:0 40px;
+  text-shadow:0 2px 12px #000}
+#subtitle.on{opacity:.92}
+
+#prompt{position:absolute;inset:0;background:#000;display:none;flex-direction:column;
+  justify-content:center;padding:0 44px;gap:8px}
+#prompt.on{display:flex}
+#prompt pre{color:var(--phosphor);font-size:13.5px;line-height:1.65;white-space:pre-wrap;font-family:inherit}
+#prompt .hint{color:#2a5c3f;font-size:11px;letter-spacing:.2em;margin-top:14px}
+
+#boot{position:absolute;inset:0;background:var(--void);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;text-align:center;padding:28px;overflow:auto}
+#boot.off{display:none}
+#boot h1{font-size:clamp(28px,5.6vw,54px);font-weight:400;letter-spacing:.5em;text-indent:.5em}
+#boot .sub{font-size:11px;letter-spacing:.3em;color:#4a565c;text-transform:uppercase;margin-top:8px}
+#picks{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.pick{width:290px;max-width:44vw;border:1px solid #232c31;background:#080b0d;padding:16px 18px;
+  text-align:left;cursor:pointer;color:var(--fog);font:inherit;transition:border-color .18s,background .18s}
+.pick:hover,.pick:focus-visible{outline:none;background:#0d1215}
+.pick.dean:hover,.pick.dean:focus-visible{border-color:var(--rust)}
+.pick.sam:hover,.pick.sam:focus-visible{border-color:var(--bruise)}
+.pick h2{font-size:15px;font-weight:400;letter-spacing:.24em;text-transform:uppercase;margin-bottom:3px;color:var(--bone)}
+.pick .phil{font-size:11px;letter-spacing:.06em;margin-bottom:11px;line-height:1.5}
+.pick.dean .phil{color:var(--rust)} .pick.sam .phil{color:var(--bruise)}
+.pick p{font-size:12px;line-height:1.65;margin-bottom:10px}
+.pick .stats{font-size:11px;line-height:1.9;color:#6d7b83;white-space:pre}
+#timepick{display:flex;gap:8px;align-items:center;font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:#4a565c}
+.tp{background:none;border:1px solid #232c31;color:#6d7b83;font:inherit;font-size:10px;
+  letter-spacing:.22em;text-transform:uppercase;padding:7px 15px;cursor:pointer;transition:.15s}
+.tp:hover,.tp:focus-visible{outline:none;border-color:var(--sodium);color:var(--sodium)}
+.tp[aria-pressed="true"]{border-color:var(--sodium);color:var(--void);background:var(--sodium)}
+#keys{font-size:11.5px;color:#5d6b73;line-height:1.95;max-width:60ch}
+#keys em{color:var(--bone);font-style:normal}
+@media (prefers-reduced-motion:reduce){.gauge span,#toast,#subtitle{transition:none}}
+</style>
+</head>
+<body class="dean">
+<div id="cabinet">
+  <div id="viewport">
+    <canvas id="screen"></canvas>
+    <div id="toast"></div>
+    <div id="subtitle"></div>
+    <div id="dialogue"><div id="speaker"></div><div id="line"></div><div id="choices"></div></div>
+    <div id="prompt"><pre id="promptText"></pre><div class="hint">any key to close</div></div>
+    <div id="boot">
+      <div><h1>OAKHAVEN</h1><div class="sub">Oregon · population 1,204 · falling</div></div>
+      <div id="picks">
+        <button class="pick dean" id="pickDean">
+          <h2>Dean</h2>
+          <div class="phil">Absurdism — the universe is a rigged meat grinder and nobody's driving. Hold the line anyway.</div>
+          <p>Solves things with iron, salt, and a shotgun. Kicks doors instead of picking them. Carries a torch and drinks to sleep.</p>
+          <div class="stats">strength    ########--
+marksmanship ########--
+occult       ###-------
+empathy      ####------</div>
+        </button>
+        <button class="pick sam" id="pickSam">
+          <h2>Sam</h2>
+          <div class="phil">Humanism — cosmic indifference is real and irrelevant. People are still worth the work.</div>
+          <p>Exorcises rather than shoots — a channelled Latin rite that breaks if he flinches. Reads what Dean would burn.</p>
+          <div class="stats">strength     ####------
+marksmanship ####------
+occult       #########-
+empathy      ########--</div>
+        </button>
+      </div>
+      <div id="timepick">
+        <span>Light</span>
+        <button class="tp" data-p="day">Day</button>
+        <button class="tp" data-p="dusk">Dusk</button>
+        <button class="tp" data-p="night">Night</button>
+      </div>
+      <div id="keys">
+        <em>WASD</em> move · <em>mouse</em> look · <em>Shift</em> run · <em>E</em> interact / enter car<br>
+        <em>L</em> time of day · <em>[</em> <em>]</em> brightness · <em>G</em> CRT filter off<br>
+        <em>F</em> torch · <em>Space</em> attack (Dean fires, Sam channels) · <em>1–4</em> answer<br>
+        driving: <em>W/S</em> throttle · <em>A/D</em> steer · <em>H</em> high beams · <em>E</em> get out
+      </div>
+    </div>
+  </div>
+  <div id="band">
+    <div class="gauge hero" id="gWho"><b>Hunter</b><span></span></div>
+    <div class="gauge" id="gStress"><b>Stress</b><span></span></div>
+    <div class="gauge" id="gTorch"><b>Torch</b><span></span></div>
+    <div class="gauge" id="gArm"><b>Loadout</b><span></span></div>
+    <div class="gauge" id="gFrag"><b>Enochian</b><span></span></div>
+    <div class="gauge" id="gLight"><b>Light (L)</b><span></span></div>
+    <div class="gauge" id="gLoc"><b>Location</b><span></span></div>
+  </div>
+</div>
+
+<script src="/static/js/net.js"></script>
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════════════
+   OAKHAVEN — ASCII engine, v2
+
+   New over v1:
+     · legible sprites — two hand-drawn LODs per model, plus importance-
+       weighted downsampling so silhouettes survive at distance
+     · real lighting — baked static lightmaps with line-of-sight, plus
+       dynamic torch cone, car headlights, and muzzle flash
+     · driving — the Impala, with beams that reach further than you can see
+     · combat — Dean shoots, Sam channels an exorcism that breaks if he moves
+     · Act II — the lockdown, and what the demons are hiding from
+   ════════════════════════════════════════════════════════════════════════ */
+
+const COLS = 136, ROWS = 56, CELL_W = 8, CELL_H = 14;
+const FOV_PLANE = 0.72, VIEW_DIST = 26;
+const RAMP = " .,:;-~=+*#%&@$";
+
+/* ── Palettes, dark → light in 8 steps ─────────────────────────────────── */
+const PAL = {
+  brick:['#120c09','#241813','#38241b','#4d3225','#6a4530','#8a5a3c','#ab7049','#c98a5c'],
+  wood: ['#110d09','#221a13','#36291d','#4b3a29','#665037','#856847','#a48158','#c29c6d'],
+  glass:['#0a1013','#14212a','#1f3340','#2b4859','#3a6073','#4b7a90','#5e95ad','#7ab3ca'],
+  steel:['#0e1011','#1d2122','#2d3335','#3f4749','#555e61','#6d787b','#889597','#a6b3b5'],
+  crt:  ['#02120a','#04381c','#065a2c','#08803e','#0aa550','#18c866','#3ce084','#7af0ae'],
+  flesh:['#0d0505','#200a0a','#331010','#471616','#5c1d1d','#722525','#8a2f2f','#a33b3b'],
+  fog:  ['#0a0d0f','#141a1e','#20282d','#2d383e','#3c4a52','#4d5e68','#61757f','#7a9099'],
+  tar:  ['#0a0b0c','#151719','#212528','#2f3438','#3e4549','#4f575c','#626b70','#7b8589'],
+  sky:  ['#1a2026','#2b353d','#3f4c56','#55646f','#6d7e8a','#8799a5','#a3b4bf','#c2d0d9'],
+  sod:  ['#0a0805','#20170a','#362510','#4b3416','#61431c','#775222','#8d6128','#d9a441'],
+  skin: ['#120e0a','#241b14','#3a2c20','#503d2c','#68503a','#82674b','#9d805f','#bd9d78'],
+  cold: ['#050708','#0b1014','#121a21','#1a252e','#22313c','#2b3e4b','#354c5c','#4d6f9a'],
+  bad:  ['#0a0206','#1c0410','#2e0719','#420b24','#560f2e','#6b1439','#821a45','#9c2152'],
+};
+const COLORS = [], PAL_BASE = {};
+for (const n in PAL) { PAL_BASE[n] = COLORS.length; for (const c of PAL[n]) COLORS.push(c); }
+const PAL_STRIDE = 128;
+
+/* Time-of-day presets. Night is the intended horror register; day exists
+   because you cannot design a level you cannot see, and dusk is the
+   compromise that reads well without giving the map away. */
+const LIGHTING = {
+  day:   {name:'Day',   ambient:0.95, indoor:0.78, sky:'sky', skyLift:0.82, exposure:1.12, rainScale:0.30},
+  dusk:  {name:'Dusk',  ambient:0.58, indoor:0.56, sky:'sky', skyLift:0.42, exposure:1.06, rainScale:0.65},
+  night: {name:'Night', ambient:0.34, indoor:0.18, sky:'fog', skyLift:0.20, exposure:1.00, rainScale:1.00},
+};
+
+/* ── Wall + floor textures: 8×8 brightness fields, digits 0–9 ──────────── */
+const TEX = {
+  '#':["77767777","77777677","66666666","76777777","77777767","66666666","77677777","77777777"],
+  'W':["88888888","88888888","44444444","99999999","88888888","44444444","99999999","88888888"],
+  'G':["33333333","34444443","34222243","34222243","34222243","34444443","33333333","33333333"],
+  '=':["96396396","96396396","96396396","96396396","96396396","96396396","96396396","96396396"],
+  '+':["66666666","69999996","69666696","69666696","69669696","69666696","69999996","66666666"],
+  'T':["22222222","29999992","29222292","29288292","29222292","29999992","22222222","22222222"],
+  'F':["78988987","89777798","97888879","88979988","79888897","88778878","97889798","87998789"],
+  'S':["12102101","01210210","21021012","10210121","02101210","21012102","10121021","01210210"],
+};
+const MAT = {'#':'brick','W':'wood','G':'glass','=':'steel','+':'wood','T':'crt','F':'flesh','S':'fog'};
+const SOLID = "#WG=+TFS";
+const EMISSIVE = "TF";
+
+const FLOOR_TEX = {
+  '.':["55655555","56555565","55555655","65555556","55565555","55655565","65555555","55555655"],
+  ',':["77777777","77777777","77777777","33333333","77777777","77777777","77777777","33333333"],
+  ' ':["44544454","54445444","44454445","45444544","44544454","54445444","44454445","45444544"],
+  'o':["77777777","73333337","77777777","77777777","73333337","77777777","77777777","77777777"],
+};
+const FLOOR_PAL = {'.':'tar', ',':'fog', ' ':'wood', 'o':'wood'};
+
+/* ── Sprites ───────────────────────────────────────────────────────────────
+   Two hand-drawn LODs each. The small one is not a shrunk copy — it's drawn
+   to survive at eight rows tall, which is the whole point. Brightness and
+   downsample importance both derive from the glyph, so authoring a model is
+   just drawing the picture. */
+const CHAR_LIGHT = {
+  '@':1.0,'O':.95,'0':.9,'o':.8,'&':.8,'M':.8,'W':.78,'#':.75,'X':.75,'%':.7,'*':.7,
+  '^':.7,'T':.7,'Y':.7,'V':.7,'A':.7,'|':.66,'/':.66,'\\':.66,'I':.66,'(':.6,')':.6,
+  '[':.6,']':.6,'{':.6,'}':.6,'<':.6,'>':.6,'=':.6,'+':.6,'d':.6,'b':.6,'p':.6,'q':.6,
+  '_':.55,'l':.55,'x':.55,'v':.55,'!':.55,'-':.5,'"':.48,'~':.45,':':.4,';':.4,
+  "'":.35,',':.32,'.':.3,'`':.3,
+};
+const LIGHT_DEFAULT = 0.62;
+
+const SPR = {
+  civilian: { pal:'skin', small:[
+"  ___  "," /o o\\ "," \\ _ / ","  |I|  "," /|#|\\ ","  |#|  ","  | |  "," _/ \\_ "], large:[
+"    _____    ","   /     \\   ","  | O   O |  ","  |   ^   |  ","  |  ___  |  ",
+"   \\_____/   ","     |I|     ","   __|I|__   ","  /#######\\  "," | ####### | ",
+" | ####### | ","  \\#######/  ","    |   |    ","    |   |    ","    |   |    ",
+"    |   |    ","   _|   |_   ","  /__/ \\__\\  "] },
+
+  possessed: { pal:'bad', small:[
+"  ___  "," /@ @\\ "," \\ ~ / ","  \\I/  ","  /#\\  "," | # | ","  |X|  "," _/ \\_ "], large:[
+"    _____    ","   /     \\   ","  | @   @ |  ","  |   ~   |  ","  |  ~~~  |  ",
+"   \\_____/   ","    \\ I /    ","   __|I|__   ","  /##XXX##\\  "," | ##XXX## | ",
+"  \\##XXX##/  ","   |     |   ","    |   |    ","    \\   /    ","     | |     ",
+"     | |     ","    _| |_    ","   /_/ \\_\\   "] },
+
+  phantom: { pal:'cold', small:[
+"  ,-.  "," ( O ) ","  \\_/  "," ~~|~~ ","  ~|~  ","  ~ ~  ","   ~   "], large:[
+"     ___     ","   ,'   `.   ","  /  O O  \\  "," |    ^    | "," |   ___   | ",
+"  \\  '-'  /  ","   `-----'   ","   ~~|I|~~   ","  ~~~|I|~~~  ","   ~~ | ~~   ",
+"    ~  ~     ","   ~   ~  ~  ","     ~   ~   ","   ~   ~     "] },
+
+  spawn: { pal:'flesh', small:[
+"  \\|/  "," \\@@@/ ","~@@@@@~"," /|||\\ ","~ ~|~ ~","  / \\  "], large:[
+"    \\ | /    ","  \\  ___  /  "," \\ /@@@@@\\ / ","~~|@@@@@@@|~~"," /|@@@@@@@|\\ ",
+"/ \\@@@@@@@/ \\","~  \\|||||/  ~"," ~ /|| ||\\ ~ ","  ~ |   | ~  ","    /   \\    ",
+"   ~     ~   "] },
+
+  impala: { pal:'steel', small:[
+"  _____  "," /#####\\ ","|O|===|O|","|_______|"," (O) (O) "], large:[
+"     _____________     ","    /#############\\    ","   /###############\\   ",
+"  |#####|=====|#####|  ","  |#####|=====|#####|  "," /###################\\ ",
+" |  O             O  | "," |___________________| ","   ||             ||   ",
+"  (O)             (O)  "] },
+
+  tree: { pal:'wood', small:[
+"   ^   ","  ^^^  "," ^^^^^ ","^^^^^^^"," ^^^^^ ","  |I|  ","  |I|  "," _/ \\_ "], large:[
+"      ^      ","     ^^^     ","    ^^^^^    ","   ^^^^^^^   ","  ^^^^^^^^^  ",
+" ^^^^^^^^^^^ ","^^^^^^^^^^^^^"," ^^^^^^^^^^^ ","  ^^^^^^^^^  ","    ^^^^^    ",
+"     |I|     ","     |I|     ","     |I|     ","    _|I|_    ","   /_/ \\_\\   "] },
+
+  lamp: { pal:'sod', small:[
+" _____ ","(00000)"," |000| ","  |I|  ","  |I|  ","  |I|  ","  |I|  "," _|I|_ "], large:[
+"   _______   ","  /0000000\\  "," |000000000| ","  \\0000000/  ","   `-|I|-'   ",
+"     |I|     ","     |I|     ","     |I|     ","     |I|     ","     |I|     ",
+"     |I|     ","     |I|     ","    _|I|_    ","   /_____\\   "] },
+
+  barrel: { pal:'steel', small:[
+" _____ ","|=====|","|=====|","|_____|"], large:[
+"  _______  "," /=======\\ ","|=========|","|=========|","|=========|","|=========|"," \\_______/ "] },
+
+  altar: { pal:'crt', small:[
+" _____ ","|@@@@@|","|=====|","|_____|"], large:[
+"  _______  "," |@@@@@@@| "," |@@@@@@@| ","/=========\\","|=========|","|_________|"] },
+};
+
+/* ── Precomputation ────────────────────────────────────────────────────── */
+function packTex(rows){ const a=new Float32Array(64);
+  for(let v=0;v<8;v++) for(let u=0;u<8;u++) a[v*8+u]=(rows[v].charCodeAt(u)-48)/9; return a; }
+const TEX_BY_CODE=new Array(128).fill(null), PALB_BY_CODE=new Uint8Array(128);
+for(const k in TEX){ const c=k.charCodeAt(0); TEX_BY_CODE[c]=packTex(TEX[k]); PALB_BY_CODE[c]=PAL_BASE[MAT[k]]; }
+const FTEX_BY_CODE=new Array(128).fill(null), FPALB_BY_CODE=new Uint8Array(128);
+for(const k in FLOOR_TEX){ const c=k.charCodeAt(0); FTEX_BY_CODE[c]=packTex(FLOOR_TEX[k]); FPALB_BY_CODE[c]=PAL_BASE[FLOOR_PAL[k]]; }
+
+const LIT2CODE=new Uint8Array(256), LIT2SHADE=new Uint8Array(256);
+for(let i=0;i<256;i++){ const t=i/255;
+  LIT2CODE[i]=RAMP.charCodeAt(Math.round(t*(RAMP.length-1)));
+  LIT2SHADE[i]=Math.round(t*7); }
+const lidx = t => t<=0?0 : t>=1?255 : (t*255)|0;
+/* Each cell paints a background block a few steps darker than its glyph.
+   This is the single biggest legibility win in the renderer: surfaces become
+   solid shaded geometry instead of sparse characters floating on black. */
+const BG_SHADE = new Uint8Array(256);
+for(let i=0;i<256;i++) BG_SHADE[i]=Math.max(0,LIT2SHADE[i]-2);
+
+/* Per-glyph brightness, for sprite shading and downsample importance. */
+const GLYPH_LIGHT = new Float32Array(128).fill(LIGHT_DEFAULT);
+GLYPH_LIGHT[32] = 0;
+for(const ch in CHAR_LIGHT) GLYPH_LIGHT[ch.charCodeAt(0)] = CHAR_LIGHT[ch];
+
+/* Sprites → flat code arrays so the draw loop touches no strings. */
+function packArt(rows){
+  const h=rows.length, w=Math.max(...rows.map(r=>r.length));
+  const codes=new Uint8Array(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) codes[y*w+x]=x<rows[y].length?rows[y].charCodeAt(x):32;
+  return {w,h,codes};
+}
+for(const k in SPR){
+  SPR[k].lodS = packArt(SPR[k].small);
+  SPR[k].lodL = packArt(SPR[k].large);
+  SPR[k].palB = PAL_BASE[SPR[k].pal] ?? PAL_BASE.fog;
+}
+
+/* ── Map construction ──────────────────────────────────────────────────── */
+function Grid(w,h,fill){ const r=[]; for(let y=0;y<h;y++) r.push(new Array(w).fill(fill)); return r; }
+function rect(g,x0,y0,x1,y1,ch){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(g[y]&&g[y][x]!==undefined) g[y][x]=ch; }
+function box(g,x0,y0,x1,y1,ch){ for(let x=x0;x<=x1;x++){g[y0][x]=ch;g[y1][x]=ch;} for(let y=y0;y<=y1;y++){g[y][x0]=ch;g[y][x1]=ch;} }
+
+function street(){
+  const W=56,H=46,g=Grid(W,H,' ');
+  box(g,0,0,W-1,H-1,'#');
+  rect(g,25,1,30,H-2,'.'); rect(g,1,20,W-2,25,'.');
+  rect(g,23,1,24,H-2,','); rect(g,31,1,32,H-2,',');
+  rect(g,1,18,W-2,19,','); rect(g,1,26,W-2,27,',');
+  box(g,6,6,20,16,'W'); rect(g,8,6,11,6,'G'); rect(g,15,6,18,6,'G'); g[16][13]='+';
+  box(g,6,30,19,40,'#'); rect(g,6,33,6,37,'G'); g[30][12]='+';
+  box(g,36,5,50,15,'#'); rect(g,36,8,36,12,'G'); g[15][43]='+';
+  box(g,36,31,51,42,'W'); rect(g,38,31,41,31,'G'); g[31][45]='+';
+  rect(g,21,10,22,12,' '); g[11][21]='T';
+  box(g,2,2,4,4,'W'); g[4][3]='+';                       // trap house, Act II
+  return {
+    id:'street', name:'Main Street', grid:g, outdoor:true, sky:'fog', rain:.85, ambient:.05,
+    spawn:{x:27.5,y:41.0,a:-Math.PI/2},
+    doors:{'13,16':{to:'pawn',x:9.5,y:8.5,a:-Math.PI/2},
+           '12,30':{to:'motel',x:10.0,y:3.0,a:Math.PI/2},
+           '43,15':{to:'bar',x:9.5,y:9.5,a:-Math.PI/2},
+           '45,31':{to:'mill',x:14.0,y:3.0,a:Math.PI/2},
+           '3,4':{to:'trap',x:9.0,y:12.0,a:-Math.PI/2,act:2}},
+    lights:[ {x:24.0,y:9.0,p:2.6,f:.10}, {x:31.5,y:17.0,p:2.6,f:.10},
+             {x:24.0,y:29.0,p:2.6,f:.10}, {x:31.5,y:38.0,p:2.6,f:.10},
+             {x:13.0,y:17.6,p:1.5,f:.22}, {x:44.0,y:16.4,p:1.9,f:.18} ],
+    entities:[
+      {m:'lamp',kind:'prop',x:24.0,y:9.0,r:.3,h:3.4},  {m:'lamp',kind:'prop',x:31.5,y:17.0,r:.3,h:3.4},
+      {m:'lamp',kind:'prop',x:24.0,y:29.0,r:.3,h:3.4}, {m:'lamp',kind:'prop',x:31.5,y:38.0,r:.3,h:3.4},
+      {m:'tree',kind:'prop',x:3.5,y:10.5,r:.5,h:3.2},  {m:'tree',kind:'prop',x:3.5,y:34.5,r:.5,h:3.2},
+      {m:'tree',kind:'prop',x:52.5,y:22.5,r:.5,h:3.2}, {m:'tree',kind:'prop',x:34.5,y:44.0,r:.5,h:3.2},
+      {m:'barrel',kind:'prop',x:22.0,y:29.0,r:.35,h:1.0},
+      {m:'impala',kind:'vehicle',x:29.0,y:40.0,r:.7,h:1.5,heading:-Math.PI/2,speed:0,driveable:true},
+      {m:'impala',kind:'car',x:27.0,y:44.0,r:.7,h:1.5,speed:2.4,node:0,
+        route:[[27,44],[27,22.5],[6,22.5],[27,22.5],[27,44]]},
+      {m:'impala',kind:'car',x:29.0,y:4.0,r:.7,h:1.5,speed:1.9,node:0,
+        route:[[29,4],[29,23.5],[50,23.5],[29,23.5],[29,4]]},
+      {m:'civilian',kind:'walker',x:23.5,y:35.0,r:.28,h:1.8,speed:.7},
+      {m:'civilian',kind:'walker',x:32.5,y:12.0,r:.28,h:1.8,speed:.55},
+      {m:'civilian',kind:'walker',x:15.0,y:26.5,r:.28,h:1.8,speed:.8},
+    ]};
+}
+function room(id,name,W,H,wall,opts){
+  const g=Grid(W,H,'o'); box(g,0,0,W-1,H-1,wall);
+  return Object.assign({id,name,grid:g,outdoor:false,sky:'wood',rain:0,ambient:.14,
+    doors:{},lights:[],entities:[]},opts,{grid:g});
+}
+function motel(){ const s=room('motel','Motel — front office',20,15,'W',{ambient:.16});
+  rect(s.grid,4,6,15,6,'W'); rect(s.grid,8,6,10,6,'o'); s.grid[14][10]='+';
+  s.doors['10,14']={to:'street',x:12.0,y:31.6,a:Math.PI/2};
+  s.spawn={x:10.0,y:12.0,a:-Math.PI/2};
+  s.lights=[{x:9.5,y:3.0,p:2.2,f:.16},{x:10,y:12,p:1.0,f:.3}];
+  s.entities=[{m:'civilian',kind:'npc',x:9.5,y:4.0,r:.35,h:1.8,dialogue:'marla',name:'Marla'}];
+  return s; }
+function mill(){ const s=room('mill','Oakhaven Mill & Timber',28,22,'=',{ambient:.02});
+  const g=s.grid;
+  for(const x of [6,12,18]){ rect(g,x,6,x+1,15,'='); rect(g,x,10,x+1,11,'o'); }
+  g[21][14]='+'; g[6][24]='T';
+  s.doors['14,21']={to:'street',x:45.5,y:32.5,a:Math.PI/2};
+  s.spawn={x:14.0,y:19.0,a:-Math.PI/2};
+  s.lights=[{x:24,y:6,p:1.6,f:.28},{x:14,y:20,p:1.8,f:.16},{x:9,y:11,p:1.3,f:.22},{x:22,y:11,p:1.3,f:.22}];
+  s.entities=[
+    {m:'barrel',kind:'prop',x:22.5,y:17.5,r:.35,h:1.0},
+    {m:'barrel',kind:'prop',x:23.5,y:16.5,r:.35,h:1.0},
+    {m:'phantom',kind:'npc',x:15.5,y:8.0,r:.4,h:2.1,dialogue:'phantom',
+      name:'Something on the green chain',hover:true,etype:'ghost',hp:60}];
+  return s; }
+function pawn(){ const s=room('pawn','Pawnshop — closed',16,12,'W',{ambient:.08});
+  rect(s.grid,3,7,12,7,'W'); s.grid[7][7]='o'; s.grid[11][8]='+'; s.grid[3][14]='T';
+  s.doors['8,11']={to:'street',x:13.5,y:17.7,a:Math.PI/2};
+  s.spawn={x:8.0,y:9.5,a:-Math.PI/2};
+  s.lights=[{x:14,y:3,p:1.4,f:.3},{x:8,y:10,p:1.5,f:.2}];
+  s.entities=[{m:'barrel',kind:'prop',x:4.5,y:4.5,r:.35,h:1.0}];
+  return s; }
+function bar(){ const s=room('bar','The Knot & Nail',18,14,'#',{ambient:.15});
+  rect(s.grid,3,4,14,4,'#'); s.grid[4][6]='o'; s.grid[13][9]='+';
+  s.doors['9,13']={to:'street',x:44.0,y:16.4,a:Math.PI/2};
+  s.spawn={x:9.0,y:11.0,a:-Math.PI/2};
+  s.lights=[{x:8,y:6,p:2.0,f:.2},{x:14,y:10,p:1.2,f:.3}];
+  s.entities=[
+    {m:'civilian',kind:'npc',x:11.5,y:6.5,r:.35,h:1.8,dialogue:'drinker',name:'A regular'},
+    {m:'barrel',kind:'prop',x:15.5,y:11.5,r:.35,h:1.0}];
+  return s; }
+function trap(){ const s=room('trap','The house on Bellweather',18,16,'W',{ambient:.02});
+  const g=s.grid; rect(g,2,8,8,8,'W'); rect(g,4,8,5,8,'o'); g[15][9]='+';
+  s.doors['9,15']={to:'street',x:3.5,y:5.6,a:Math.PI/2};
+  s.spawn={x:9.0,y:12.0,a:-Math.PI/2};
+  s.lights=[{x:4,y:4,p:1.2,f:.35},{x:9,y:13,p:1.4,f:.2},{x:14,y:3.5,p:1.1,f:.3}];
+  s.entities=[
+    {m:'altar',kind:'prop',x:14.5,y:3.5,r:.4,h:1.2},
+    {m:'civilian',kind:'npc',x:4.0,y:4.0,r:.35,h:1.6,dialogue:'kevin',name:'Kevin Tran'},
+    {m:'possessed',kind:'enemy',x:14.0,y:12.0,r:.35,h:1.9,etype:'demon',hp:100,speed:.9,
+      state:'cower',dialogue:'demon'}];
+  return s; }
+
+const SECTORS={};
+[street(),motel(),mill(),pawn(),bar(),trap()].forEach(s=>SECTORS[s.id]=s);
+
+/* ── Sector packing + lightmap baking ──────────────────────────────────── */
+function packSector(s){
+  s.H=s.grid.length; s.W=s.grid[0].length;
+  const n=s.W*s.H;
+  s.cells=new Uint8Array(n); s.solidMask=new Uint8Array(n); s.floorCells=new Uint8Array(n);
+  for(let y=0;y<s.H;y++) for(let x=0;x<s.W;x++){
+    const ch=s.grid[y][x], i=y*s.W+x;
+    s.cells[i]=ch.charCodeAt(0);
+    s.solidMask[i]=SOLID.includes(ch)?1:0;
+    s.floorCells[i]=(FLOOR_TEX[ch]?ch:(s.outdoor?' ':'o')).charCodeAt(0);
+  }
+  bakeLight(s);
+}
+/* Static illumination is baked once per cell with a line-of-sight test, so
+   light pools under a streetlight and stops at the wall instead of bleeding
+   through it. Everything dynamic — torch, beams, muzzle flash — is added per
+   ray at render time. */
+function bakeLight(s){
+  const n=s.W*s.H;
+  s.lm=new Float32Array(n).fill(s.ambient);
+  for(const L of (s.lights||[])){
+    if(L.off) continue;
+    const reach=Math.sqrt(L.p/0.02/Math.max(L.f,.01))+2;
+    const x0=Math.max(0,(L.x-reach)|0), x1=Math.min(s.W-1,(L.x+reach)|0);
+    const y0=Math.max(0,(L.y-reach)|0), y1=Math.min(s.H-1,(L.y+reach)|0);
+    for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
+      const i=y*s.W+x; if(s.solidMask[i]) continue;
+      const dx=x+.5-L.x, dy=y+.5-L.y, d2=dx*dx+dy*dy;
+      const v=L.p/(1+d2*L.f);
+      if(v<0.012) continue;
+      if(!visible(s,L.x,L.y,x+.5,y+.5)) continue;
+      s.lm[i]+=v;
+    }
+  }
+}
+function visible(s,ax,ay,bx,by){
+  const dx=bx-ax, dy=by-ay, steps=Math.ceil(Math.hypot(dx,dy)*2.2);
+  for(let k=1;k<steps;k++){
+    const t=k/steps, cx=(ax+dx*t)|0, cy=(ay+dy*t)|0;
+    if(cx<0||cy<0||cx>=s.W||cy>=s.H) return false;
+    if(s.solidMask[cy*s.W+cx]) return false;
+  }
+  return true;
+}
+function lightAt(s,x,y){
+  const cx=x|0, cy=y|0;
+  if(cx<0||cy<0||cx>=s.W||cy>=s.H) return s.ambient;
+  return s.lm[cy*s.W+cx];
+}
+Object.values(SECTORS).forEach(s=>{ s.ambientBase=s.ambient; s.rainBase=s.rain; s.skyBase=s.sky; });
+
+/* Switching time of day rescales every sector's ambient term and rebakes the
+   static lightmaps. Interiors keep a floor of their own authored darkness — a
+   boarded-up pawnshop at noon is still dim, just not invisible. */
+function applyPreset(key){
+  const p=LIGHTING[key]||LIGHTING.dusk;
+  S.preset=key; S.light=p;
+  for(const id in SECTORS){
+    const s=SECTORS[id];
+    s.ambient = s.outdoor ? p.ambient : Math.max(s.ambientBase*p.indoor*1.6, p.ambient*p.indoor);
+    s.sky     = s.outdoor ? p.sky : s.skyBase;
+    s.rain    = s.rainBase*p.rainScale;
+    packSector(s);
+  }
+  const el=document.querySelector('#gLight span');
+  if(el) el.textContent=`${p.name} · ${Math.round(S.gain*100)}%`;
+}
+Object.values(SECTORS).forEach(packSector);
+
+/* ── Protagonists ──────────────────────────────────────────────────────── */
+const HEROES = {
+  dean:{ name:'Dean', tint:'rust', philosophy:'absurdism',
+    stats:{strength:8,marksmanship:8,occult:3,empathy:4},
+    attack:'shotgun', ammo:12, torchPower:3.4, walk:2.3, stressFloor:38 },
+  sam:{ name:'Sam', tint:'cold', philosophy:'humanism',
+    stats:{strength:4,marksmanship:4,occult:9,empathy:8},
+    attack:'exorcism', ammo:6, torchPower:2.9, walk:2.1, stressFloor:30 },
+};
+
+/* ── State ─────────────────────────────────────────────────────────────── */
+const S = {
+  hero:'dean', cfg:HEROES.dean, sector:null,
+  px:0,py:0,dirX:1,dirY:0,planeX:0,planeY:FOV_PLANE,
+  vx:0,vy:0,angle:0,pitch:0,posZ:0,bob:0,
+  stress:34, sobriety:100, blood:0, hp:100, frags:0, act:1,
+  torchOn:false, battery:100, flicker:1,
+  ammo:12, muzzle:0, channel:0, channelTarget:null,
+  driving:null, highBeam:false,
+  nihilism:0, humanism:0, flags:{}, counters:{drinks:0,doses:0,killed:0,freed:0,exorcised:0},
+  fragsFound:{}, glitch:0, running:false, time:0, transition:0, pendingDoor:null, hurt:0,
+  preset:'dusk', light:LIGHTING.dusk, crt:true, gain:1.0,
+};
+
+/* ── Renderer ──────────────────────────────────────────────────────────── */
+const canvas=document.getElementById('screen');
+const ctx=canvas.getContext('2d',{alpha:false});
+const DPR=Math.min(window.devicePixelRatio||1,2);
+canvas.width=COLS*CELL_W*DPR; canvas.height=ROWS*CELL_H*DPR;
+canvas.style.aspectRatio=`${COLS*CELL_W} / ${ROWS*CELL_H}`;
+ctx.scale(DPR,DPR);
+
+const glyphArr=new Array(128*PAL_STRIDE).fill(null);
+const glyphFont=`${CELL_H-2}px ${getComputedStyle(document.body).fontFamily}`;
+function glyph(code,ci){
+  const k=code*PAL_STRIDE+ci; let c=glyphArr[k]; if(c) return c;
+  c=document.createElement('canvas'); c.width=CELL_W*DPR; c.height=CELL_H*DPR;
+  const g=c.getContext('2d'); g.scale(DPR,DPR); g.font=glyphFont;
+  g.textBaseline='top'; g.fillStyle=COLORS[ci]||'#000';
+  g.fillText(String.fromCharCode(code),0,0);
+  glyphArr[k]=c; return c;
+}
+const bufChar=new Uint8Array(COLS*ROWS), bufCol=new Uint8Array(COLS*ROWS);
+const bufBg=new Uint8Array(COLS*ROWS);
+const zBuf=new Float32Array(COLS), rowDist=new Float32Array(ROWS), coneLut=new Float32Array(COLS);
+function put(x,y,code,ci){ if(x<0||x>=COLS||y<0||y>=ROWS) return;
+  const i=y*COLS+x; bufChar[i]=code; bufCol[i]=ci; }
+function hash2(x,y){ let h=(x*374761393+y*668265263)|0; h=(h^(h>>13))*1274126177|0;
+  return ((h^(h>>16))>>>0)/4294967295; }
+const colNoise=new Float32Array(COLS);
+for(let i=0;i<COLS;i++) colNoise[i]=hash2(i,17);
+
+const rain=[];
+for(let i=0;i<240;i++) rain.push({x:Math.random()*COLS,y:Math.random()*ROWS,
+  s:26+Math.random()*34,l:1+(Math.random()*3|0)});
+
+/* Handheld / vehicle illumination. Every screen column is a ray, so the cone
+   falloff is a function of the column alone — precompute it once per frame. */
+function beamSetup(){
+  const drive=!!S.driving;
+  let power=0, width=0.55, falloff=0.055;
+  if(drive){
+    power = S.highBeam?3.4:2.2; width=S.highBeam?0.95:0.7; falloff=S.highBeam?0.016:0.03;
+  } else if(S.torchOn && S.battery>0){
+    power = S.cfg.torchPower*S.flicker; width=0.52; falloff=0.048;
+  }
+  power += S.muzzle*5.0;                                   // the shot lights the room
+  if(S.muzzle>0) width=Math.max(width,1.0);
+  for(let x=0;x<COLS;x++){
+    const cam=Math.abs(2*x/COLS-1)/width;
+    coneLut[x]= cam>=1 ? 0 : (1-cam*cam)*power;
+  }
+  return falloff;
+}
+
+function renderWorld(dt){
+  const sec=S.sector, horizon=ROWS/2+S.pitch;
+  const SW=sec.W,SH=sec.H,cells=sec.cells,mask=sec.solidMask,fcells=sec.floorCells,lm=sec.lm;
+  const outdoor=sec.outdoor, halfR=.5*ROWS, amb=sec.ambient;
+  const skyBase=PAL_BASE[sec.sky]||PAL_BASE.fog, woodBase=PAL_BASE.wood, tarBase=PAL_BASE.tar;
+  const beamFall=beamSetup(), expo=S.light.exposure*S.gain;
+
+  for(let y=0;y<ROWS;y++){ const d=y-horizon; rowDist[y]=halfR/(d===0?1e-4:(d<0?-d:d)); }
+  const px=S.px,py=S.py,fpx=px|0,fpy=py|0;
+
+  for(let x=0;x<COLS;x++){
+    const cam=2*x/COLS-1;
+    const rdx=S.dirX+S.planeX*cam||1e-9, rdy=S.dirY+S.planeY*cam||1e-9;
+    const beam=coneLut[x];
+
+    let mx=fpx,my=fpy;
+    const ddx=rdx<0?-1/rdx:1/rdx, ddy=rdy<0?-1/rdy:1/rdy;
+    let sdx,sdy,stx,sty;
+    if(rdx<0){stx=-1;sdx=(px-mx)*ddx;} else {stx=1;sdx=(mx+1-px)*ddx;}
+    if(rdy<0){sty=-1;sdy=(py-my)*ddy;} else {sty=1;sdy=(my+1-py)*ddy;}
+    let side=0,code=35,guard=0,lastOpen=fpy*SW+fpx;
+    while(guard++<200){
+      if(sdx<sdy){sdx+=ddx;mx+=stx;side=0;} else {sdy+=ddy;my+=sty;side=1;}
+      if(mx<0||my<0||mx>=SW||my>=SH){code=35;break;}
+      const ci=my*SW+mx;
+      if(mask[ci]){code=cells[ci];break;}
+      lastOpen=ci;
+    }
+    let dist=side===0?sdx-ddx:sdy-ddy; if(dist<0.05) dist=0.05;
+    zBuf[x]=dist;
+
+    let wallX=side===0?py+dist*rdy:px+dist*rdx; wallX-=Math.floor(wallX);
+    const lineH=ROWS/dist, zoff=S.posZ/dist;
+    const drawStart=(-lineH*.5+horizon+zoff)|0, drawEnd=(lineH*.5+horizon+zoff)|0;
+
+    const tex=TEX_BY_CODE[code]||TEX_BY_CODE[35], palB=PALB_BY_CODE[code];
+    let texU=(wallX*8)|0; if(texU>7) texU=7;
+    const emis=EMISSIVE.includes(String.fromCharCode(code));
+
+    /* illumination on the wall face: baked static + beam, with the beam
+       fading by distance and the face turned away being dimmer */
+    let illum = (lm[lastOpen] + beam/(1+dist*dist*beamFall))*expo;
+    if(side===1) illum*=.78;
+    if(emis) illum=Math.max(illum,.85);
+
+    /* ceiling / sky */
+    let idx=x; const cTop=drawStart<ROWS?drawStart:ROWS;
+    for(let y=0;y<cTop;y++,idx+=COLS){
+      let v,cb;
+      if(outdoor){ v=S.light.skyLift+colNoise[(x+y)%COLS]*.07+(y/ROWS)*.10; cb=skyBase; }
+      else { const rd=rowDist[y]; v=(lm[lastOpen]*.55)/(1+rd*.12)+beam*.06/(1+rd*rd*beamFall); cb=woodBase; }
+      const li=lidx(v*expo); bufChar[idx]=LIT2CODE[li];
+      bufCol[idx]=cb+LIT2SHADE[li]; bufBg[idx]=cb+BG_SHADE[li];
+    }
+    /* wall */
+    const y0=drawStart<0?0:drawStart, y1=drawEnd>ROWS-1?ROWS-1:drawEnd, inv=8/lineH;
+    idx=y0*COLS+x;
+    for(let y=y0;y<=y1;y++,idx+=COLS){
+      let tv=((y-drawStart)*inv)|0; if(tv>7)tv=7; else if(tv<0)tv=0;
+      const li=lidx(tex[tv*8+texU]*illum);
+      bufChar[idx]=LIT2CODE[li]; bufCol[idx]=palB+LIT2SHADE[li]; bufBg[idx]=palB+BG_SHADE[li];
+    }
+    /* floor */
+    const fs=drawEnd+1>0?drawEnd+1:0; idx=fs*COLS+x;
+    for(let y=fs;y<ROWS;y++,idx+=COLS){
+      if(y<=horizon) continue;
+      const rd=rowDist[y], fx=px+rd*rdx, fy=py+rd*rdy;
+      const cx=fx|0, cy=fy|0;
+      const inside = cx>=0&&cy>=0&&cx<SW&&cy<SH;
+      const fcode = inside ? fcells[cy*SW+cx] : (outdoor?32:111);
+      const ftex=FTEX_BY_CODE[fcode]||FTEX_BY_CODE[32];
+      let u=((fx-cx)*8)|0; if(u>7)u=7; let v=((fy-cy)*8)|0; if(v>7)v=7;
+      let base=ftex[v*8+u];
+      if(fcode===46 && fx>27.78 && fx<28.02 && (cy%3)!==0) base=.95;
+      const fi = inside ? lm[cy*SW+cx] : amb;
+      const li=lidx(base*(fi + beam/(1+rd*rd*beamFall))*expo);
+      const fb=FPALB_BY_CODE[fcode]||tarBase;
+      bufChar[idx]=LIT2CODE[li]; bufCol[idx]=fb+LIT2SHADE[li]; bufBg[idx]=fb+BG_SHADE[li];
+    }
+  }
+
+  /* sprites, far to near */
+  const ents=sec.entities.filter(e=>e!==S.driving && !e.dead).sort((a,b)=>
+    ((b.x-px)**2+(b.y-py)**2)-((a.x-px)**2+(a.y-py)**2));
+  for(const e of ents) drawSprite(e,sec,horizon,beamFall);
+
+  if(sec.rain>0 && !S.driving) drawRain(dt);
+  else if(sec.rain>0) drawRain(dt,.35);
+}
+
+function drawRain(dt,scale=1){
+  const ci=PAL_BASE.fog+3;
+  for(const d of rain){
+    d.y+=d.s*dt*scale; d.x-=6*dt;
+    if(d.y>ROWS){d.y=-2;d.x=Math.random()*COLS;}
+    if(d.x<0) d.x+=COLS;
+    const rx=d.x|0;
+    for(let k=0;k<d.l;k++){ const ry=(d.y|0)+k; if(ry<0||ry>=ROWS) continue;
+      put(rx,ry,k===d.l-1?39:47,ci); }
+  }
+}
+
+/* Sprite drawing.
+   Two things make models legible: picking the LOD drawn for the size we're
+   about to render at, and — when shrinking — taking the *brightest* glyph in
+   each source block rather than point-sampling, so an eye or an outline never
+   vanishes into a gap. */
+function drawSprite(e,sec,horizon,beamFall){
+  const model=SPR[e.m]; if(!model) return;
+  const sx=e.x-S.px, sy=e.y-S.py;
+  const inv=1/(S.planeX*S.dirY-S.dirX*S.planeY);
+  const tx=inv*(S.dirY*sx-S.dirX*sy), ty=inv*(-S.planeY*sx+S.planeX*sy);
+  if(ty<=.2) return;
+
+  const screenX=((COLS/2)*(1+tx/ty))|0;
+  const hgt=Math.abs((ROWS/ty)*(e.h||1.8)/1.8)|0;
+  if(hgt<2) return;
+  const lod = hgt>=17 ? model.lodL : model.lodS;
+  const wid=Math.max(2,(hgt*(lod.w/lod.h)*.58)|0);
+
+  const vShift=e.hover?Math.sin(S.time*1.6+e.x)*.1:0;
+  const ground=(horizon+(ROWS/ty)/2+S.posZ/ty)|0 + (vShift*hgt|0);
+  const top=ground-hgt;
+
+  const beam=coneLut[Math.max(0,Math.min(COLS-1,screenX))];
+  let illum = (lightAt(sec,e.x,e.y) + beam/(1+ty*ty*beamFall))*S.light.exposure*S.gain;
+  if(e.lit) illum=Math.max(illum,e.lit);
+  const palB=model.palB, aw=lod.w, ah=lod.h, codes=lod.codes;
+  const shrinkX=wid<aw, shrinkY=hgt<ah;
+
+  for(let i=0;i<wid;i++){
+    const x=screenX-(wid>>1)+i;
+    if(x<0||x>=COLS||ty>=zBuf[x]) continue;
+    const u0=(i*aw/wid)|0, u1=shrinkX?Math.max(u0+1,((i+1)*aw/wid)|0):u0+1;
+    for(let j=0;j<hgt;j++){
+      const y=top+j; if(y<0||y>=ROWS) continue;
+      const v0=(j*ah/hgt)|0, v1=shrinkY?Math.max(v0+1,((j+1)*ah/hgt)|0):v0+1;
+      /* keep the most visually important glyph in the block */
+      let best=32, bestW=-1;
+      for(let v=v0;v<v1&&v<ah;v++) for(let u=u0;u<u1&&u<aw;u++){
+        const c=codes[v*aw+u], w=GLYPH_LIGHT[c];
+        if(w>bestW){bestW=w;best=c;}
+      }
+      if(best===32) continue;
+      const li=lidx(bestW*illum*1.2);
+      if(li<8) continue;
+      const idx=y*COLS+x;
+      bufChar[idx]=best; bufCol[idx]=palB+LIT2SHADE[li]; bufBg[idx]=palB+BG_SHADE[li];
+    }
+  }
+}
+
+const GLITCH=new Uint8Array("!@#$%^&*<>?/\\|{}[]~".split('').map(c=>c.charCodeAt(0)));
+const tearC=new Uint8Array(COLS), tearP=new Uint8Array(COLS);
+function postProcess(){
+  if(S.hurt>0){                                            // blood pulse at the edges
+    const ci=PAL_BASE.bad+5, n=(S.hurt*COLS*2)|0;
+    for(let i=0;i<n;i++){
+      const edge=Math.random()<.5;
+      const x=edge?((Math.random()*COLS*.18)|0)+(Math.random()<.5?0:(COLS*.82)|0):(Math.random()*COLS)|0;
+      const y=edge?(Math.random()*ROWS)|0:((Math.random()*ROWS*.16)|0)+(Math.random()<.5?0:(ROWS*.84)|0);
+      put(x,y,37,ci);
+    }
+  }
+  const g=S.glitch+Math.max(0,(S.stress-70)/30)*.5;
+  if(g<=.001) return;
+  const fci=PAL_BASE.flesh+6, gci=PAL_BASE.fog+3, n=(g*COLS*ROWS*.05)|0;
+  for(let i=0;i<n;i++){ const idx=(Math.random()*COLS*ROWS)|0;
+    bufChar[idx]=GLITCH[(Math.random()*GLITCH.length)|0];
+    bufCol[idx]=Math.random()<.14?fci:gci; }
+  if(g>.35){ const rows=(g*5)|0;
+    for(let k=0;k<rows;k++){ const y=(Math.random()*ROWS)|0, b=y*COLS, sh=((Math.random()*10)|0)-5;
+      tearC.set(bufChar.subarray(b,b+COLS)); tearP.set(bufCol.subarray(b,b+COLS));
+      for(let x=0;x<COLS;x++){ const s=(x+sh+COLS)%COLS; bufChar[b+x]=tearC[s]; bufCol[b+x]=tearP[s]; } } }
+}
+function drawReticle(){
+  const cx=COLS>>1, cy=(ROWS>>1)+(S.pitch|0), ci=PAL_BASE.bone||PAL_BASE.fog+7;
+  if(S.channel>0){                                          // Sam's rite, filling
+    const w=22, n=Math.round(S.channel*w), base=PAL_BASE.cold;
+    for(let i=0;i<w;i++) put(cx-(w>>1)+i, cy+4, i<n?61:45, base+(i<n?7:3));
+  } else {
+    put(cx,cy,43,ci); 
+  }
+}
+function flush(){
+  let i=0;
+  for(let y=0;y<ROWS;y++){
+    const py=y*CELL_H;
+    /* Background first, run-length encoded across the row. Adjacent cells
+       usually share a shade, so this is a few dozen fills per row rather
+       than one per cell. */
+    let x=0;
+    while(x<COLS){
+      const c=bufBg[i+x];
+      let x2=x+1;
+      while(x2<COLS && bufBg[i+x2]===c) x2++;
+      ctx.fillStyle=COLORS[c]||'#000';
+      ctx.fillRect(x*CELL_W,py,(x2-x)*CELL_W,CELL_H);
+      x=x2;
+    }
+    for(let k=0;k<COLS;k++){
+      const c=bufChar[i+k];
+      if(c===32||c===0) continue;
+      ctx.drawImage(glyph(c,bufCol[i+k]),k*CELL_W,py,CELL_W,CELL_H);
+    }
+    i+=COLS;
+  }
+}
+
+/* ── Physics ───────────────────────────────────────────────────────────── */
+const PLAYER_R=.26;
+function solidAt(sec,x,y){ return (x<0||y<0||x>=sec.W||y>=sec.H)?1:sec.solidMask[y*sec.W+x]; }
+function collides(sec,x,y,r){
+  for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+    const cx=(x|0)+dx, cy=(y|0)+dy;
+    if(!solidAt(sec,cx,cy)) continue;
+    const nx=Math.max(cx,Math.min(x,cx+1)), ny=Math.max(cy,Math.min(y,cy+1));
+    if((x-nx)**2+(y-ny)**2 < r*r) return true;
+  } return false;
+}
+function tryMove(sec,x,y,nx,ny,r){
+  let ox=x,oy=y;
+  if(!collides(sec,nx,oy,r)) ox=nx;
+  if(!collides(sec,ox,ny,r)) oy=ny;
+  return [ox,oy];
+}
+
+const keys={};
+addEventListener('keydown',e=>{
+  if(!keys[e.code]) keys['once_'+e.code]=true;
+  keys[e.code]=true;
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)) e.preventDefault();
+  if(elPrompt.classList.contains('on')){ elPrompt.classList.remove('on'); return; }
+  if(dlg.open){ handleDialogueKey(e); return; }
+  if(e.code==='KeyE') interact();
+  if(e.code==='KeyF') toggleTorch();
+  if(e.code==='KeyL'){
+    const order=['night','dusk','day'];
+    applyPreset(order[(order.indexOf(S.preset)+1)%order.length]);
+    toast(S.light.name);
+  }
+  if(e.code==='BracketRight'||e.code==='BracketLeft'){
+    S.gain=Math.max(0.5,Math.min(2.2,S.gain+(e.code==='BracketRight'?0.1:-0.1)));
+    toast('Brightness '+Math.round(S.gain*100)+'%');
+  }
+  if(e.code==='KeyG'){
+    S.crt=!S.crt;
+    document.getElementById('viewport').classList.toggle('flat',!S.crt);
+    toast(S.crt?'CRT filter on':'CRT filter off — flat colour');
+  }
+  if(e.code==='KeyH'&&S.driving){ S.highBeam=!S.highBeam; toast(S.highBeam?'High beams':'Low beams'); }
+});
+addEventListener('keyup',e=>keys[e.code]=false);
+canvas.addEventListener('click',()=>{ if(S.running&&!dlg.open) canvas.requestPointerLock(); });
+addEventListener('mousemove',e=>{
+  if(document.pointerLockElement===canvas&&!dlg.open){
+    if(S.driving) S.angle+=e.movementX*.0008;
+    else { S.angle+=e.movementX*.0022; S.pitch=Math.max(-16,Math.min(16,S.pitch-e.movementY*.1)); }
+  }
+});
+
+function toggleTorch(){
+  if(S.battery<=0){ toast('Torch is dead'); return; }
+  S.torchOn=!S.torchOn;
+  toast(S.torchOn?'Torch on':'Torch off');
+}
+
+/* ── Movement, on foot and in the car ──────────────────────────────────── */
+function updatePlayer(dt){
+  const sec=S.sector;
+  if(S.driving) return updateDriving(dt,sec);
+
+  const sprint=keys.ShiftLeft||keys.ShiftRight;
+  const accel=sprint?26:16;
+  const maxV=(sprint?S.cfg.walk*1.6:S.cfg.walk)*(1-Math.max(0,S.stress-80)/60);
+  if(keys.ArrowLeft) S.angle-=1.9*dt;
+  if(keys.ArrowRight) S.angle+=1.9*dt;
+
+  let ix=0,iy=0;
+  if(keys.KeyW) iy+=1; if(keys.KeyS) iy-=1;
+  if(keys.KeyD) ix+=1; if(keys.KeyA) ix-=1;
+  const len=Math.hypot(ix,iy)||1; ix/=len; iy/=len;
+  const moving = ix||iy;
+
+  S.vx+=(S.dirX*iy + (-S.dirY)*ix)*accel*dt;
+  S.vy+=(S.dirY*iy + ( S.dirX)*ix)*accel*dt;
+  const damp=Math.pow(.0016,dt); S.vx*=damp; S.vy*=damp;
+  const sp=Math.hypot(S.vx,S.vy);
+  if(sp>maxV){ S.vx=S.vx/sp*maxV; S.vy=S.vy/sp*maxV; }
+
+  const [nx,ny]=tryMove(sec,S.px,S.py,S.px+S.vx*dt,S.py+S.vy*dt,PLAYER_R);
+  if(nx===S.px) S.vx=0; if(ny===S.py) S.vy=0;
+  S.px=nx; S.py=ny;
+  S.bob+=sp*dt*7;
+  S.posZ=Math.sin(S.bob)*sp*1.1;
+
+  /* Sam's rite needs stillness — moving breaks the channel. */
+  if(moving && S.channel>0){ S.channel=0; S.channelTarget=null; subtitle('The words come apart. You moved.'); }
+
+  const dark = lightAt(sec,S.px,S.py) < .18;
+  const target = S.cfg.stressFloor + (dark?18:0) + (sec.id==='mill'?12:0) + (S.act>=2?10:0);
+  S.stress += ((S.stress<target?1:-1)*.9)*dt;
+  S.stress=Math.max(0,Math.min(100,S.stress));
+}
+
+function updateDriving(dt,sec){
+  const car=S.driving;
+  const throttle=(keys.KeyW?1:0)-(keys.KeyS?1:0);
+  const steer=(keys.KeyD?1:0)-(keys.KeyA?1:0);
+  car.speed += throttle*7*dt;
+  car.speed *= Math.pow(.55,dt);
+  car.speed = Math.max(-3.5,Math.min(11,car.speed));
+  /* steering authority scales with speed — you can't pivot standing still */
+  car.heading += steer*dt*1.5*Math.min(1,Math.abs(car.speed)/3)*Math.sign(car.speed||1);
+  S.angle = car.heading;
+
+  const nx=car.x+Math.cos(car.heading)*car.speed*dt;
+  const ny=car.y+Math.sin(car.heading)*car.speed*dt;
+  const [mx,my]=tryMove(sec,car.x,car.y,nx,ny,car.r);
+  if(mx===car.x&&my===car.y&&Math.abs(car.speed)>2){
+    S.stress=Math.min(100,S.stress+Math.abs(car.speed));
+    toast('You put the Impala into a wall'); car.speed*=-.25;
+  }
+  car.x=mx; car.y=my;
+  S.px=car.x; S.py=car.y; S.posZ=-2.5;
+
+  /* running someone down is possible, counts, and is remembered */
+  for(const e of sec.entities){
+    if(e===car||e.dead) continue;
+    if(e.kind!=='walker'&&e.kind!=='enemy'&&e.kind!=='npc') continue;
+    if(Math.hypot(e.x-car.x,e.y-car.y)<car.r+e.r && Math.abs(car.speed)>4){
+      e.dead=true;
+      if(e.kind==='walker'||e.kind==='npc'){ S.counters.killed++; S.nihilism+=2;
+        S.stress=Math.min(100,S.stress+22); subtitle('You feel it go under the wheels. You keep driving.'); }
+      else { S.counters.exorcised++; subtitle('Two tons of Detroit steel beats a rosary sometimes.'); }
+    }
+  }
+  S.stress += (Math.abs(car.speed)>7?1.6:-1.2)*dt;
+  S.stress=Math.max(0,Math.min(100,S.stress));
+}
+
+/* ── Entity AI ─────────────────────────────────────────────────────────── */
+function updateEntities(dt){
+  const sec=S.sector;
+  for(const e of sec.entities){
+    if(e.dead) continue;
+    if(e.kind==='car'){
+      const [tx,ty]=e.route[e.node];
+      const dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy);
+      if(d<.35){ e.node=(e.node+1)%e.route.length; continue; }
+      e.heading=Math.atan2(dy,dx);
+      e.x+=dx/d*e.speed*dt; e.y+=dy/d*e.speed*dt;
+      e.lit=.9;                                          // its own headlights read as bright
+      if(!S.driving && Math.hypot(e.x-S.px,e.y-S.py)<e.r+PLAYER_R){
+        const k=6/Math.max(.3,Math.hypot(e.x-S.px,e.y-S.py));
+        S.vx+=(S.px-e.x)*k; S.vy+=(S.py-e.y)*k;
+        S.stress=Math.min(100,S.stress+14); S.hp-=6; S.hurt=1;
+        toast('Clipped by the fender');
+      }
+    } else if(e.kind==='walker'){
+      if(!e.tx||Math.hypot(e.tx-e.x,e.ty-e.y)<.4){
+        e.tx=e.x+(Math.random()-.5)*12; e.ty=e.y+(Math.random()-.5)*12; }
+      step(sec,e,e.tx,e.ty,e.speed,dt);
+    } else if(e.kind==='enemy'){
+      const d=Math.hypot(e.x-S.px,e.y-S.py);
+      if(e.state==='cower'){                              // Act II: they're hiding, not hunting
+        if(d<7) step(sec,e,e.x*2-S.px,e.y*2-S.py,e.speed*1.3,dt);
+      } else if(e.state==='hunt'){
+        step(sec,e,S.px,S.py,e.speed,dt);
+        if(d<.8 && S.time-(e.lastHit||0)>1.1){
+          e.lastHit=S.time; S.hp-=9; S.hurt=1; S.stress=Math.min(100,S.stress+9);
+          if(S.channel>0){ S.channel=0; subtitle('It gets a hand on you. The rite dies in your throat.'); }
+        }
+      }
+    }
+  }
+}
+function step(sec,e,tx,ty,speed,dt){
+  const dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy)||1;
+  const [mx,my]=tryMove(sec,e.x,e.y,e.x+dx/d*speed*dt,e.y+dy/d*speed*dt,e.r);
+  if(mx===e.x&&my===e.y) e.tx=null;
+  e.x=mx; e.y=my;
+}
+
+/* ── Attacking: two verbs, two philosophies ────────────────────────────── */
+function aimedEntity(maxDist,maxDot){
+  const sec=S.sector; let best=null,bd=1e9;
+  for(const e of sec.entities){
+    if(e.dead||e.kind==='prop'||e.kind==='vehicle'||e.kind==='car') continue;
+    const dx=e.x-S.px,dy=e.y-S.py,d=Math.hypot(dx,dy);
+    if(d>maxDist) continue;
+    if((dx/d)*S.dirX+(dy/d)*S.dirY < maxDot) continue;
+    if(d<bd){bd=d;best=e;}
+  }
+  return best;
+}
+function updateAttack(dt){
+  if(S.cfg.attack==='shotgun'){
+    if(keys['once_Space']){
+      keys['once_Space']=false;
+      if(S.ammo<=0){ toast('Dry'); subtitle('Click. Nothing in the tube.'); }
+      else {
+        S.ammo--; S.muzzle=.32; S.stress=Math.min(100,S.stress+1.5);
+        const t=aimedEntity(9,.86);
+        if(t){
+          const dmg = t.etype==='eldritch'?4:t.etype==='demon'?14:38;
+          t.hp=(t.hp||40)-dmg;
+          if(t.etype==='eldritch') subtitle('The salt goes through it and keeps going. It does not notice.');
+          else if(t.hp<=0){ killEntity(t,'shot'); }
+          else subtitle(t.etype==='demon'?'Rock salt. It buys seconds, not a corpse.':'It comes apart and starts pulling itself back.');
+        }
+      }
+    }
+  } else {                                                 /* Sam: channelled rite */
+    const holding=keys.Space;
+    const t=aimedEntity(7,.9);
+    if(holding && t && (t.etype==='demon'||t.etype==='ghost')){
+      if(S.channelTarget!==t){ S.channelTarget=t; S.channel=0;
+        subtitle('"Exorcizamus te, omnis immundus spiritus..."'); }
+      S.channel+=dt/(t.etype==='demon'?3.4:2.2);
+      if(S.channel>=1){
+        S.channel=0; S.channelTarget=null; killEntity(t,'exorcised');
+      }
+    } else if(S.channel>0 && (!holding||!t)){
+      S.channel=0; S.channelTarget=null;
+    }
+  }
+  if(S.muzzle>0) S.muzzle=Math.max(0,S.muzzle-dt*2.6);
+}
+function killEntity(e,how){
+  e.dead=true;
+  if(how==='exorcised'){
+    S.counters.exorcised++; S.humanism+=1; S.stress=Math.max(0,S.stress-5);
+    subtitle(e.etype==='demon'
+      ? 'Black smoke goes out through the floorboards. The body left behind is breathing.'
+      : 'It lets go. Whatever it was still owed, it stops owing it.');
+  } else {
+    S.counters.killed++; S.nihilism+=1;
+    subtitle(e.etype==='demon'
+      ? 'The host drops. You do not check whether the host was still in there.'
+      : 'Salt and iron. It scatters, and something in the air drinks what is left.');
+  }
+  if(e.onDeath) e.onDeath();
+}
+
+/* ── Interaction ───────────────────────────────────────────────────────── */
+function interact(){
+  const sec=S.sector;
+  if(S.driving){
+    if(Math.abs(S.driving.speed)>1.2){ toast('Slow down first'); return; }
+    const car=S.driving; S.driving=null; S.posZ=0; S.highBeam=false;
+    S.px=car.x+Math.cos(car.heading+Math.PI/2)*1.2;
+    S.py=car.y+Math.sin(car.heading+Math.PI/2)*1.2;
+    if(collides(sec,S.px,S.py,PLAYER_R)){ S.px=car.x; S.py=car.y; }
+    toast('Out of the car'); return;
+  }
+  for(const e of sec.entities){
+    if(e.dead) continue;
+    const dx=e.x-S.px,dy=e.y-S.py,d=Math.hypot(dx,dy);
+    if(d>2.4) continue;
+    if((dx/d)*S.dirX+(dy/d)*S.dirY<.5) continue;
+    if(e.kind==='vehicle'){ S.driving=e; e.heading=S.angle; S.posZ=-2.5;
+      toast('Impala — W/S throttle, A/D steer, H beams'); return; }
+    if(e.dialogue){ openDialogue(e.dialogue,e); return; }
+  }
+  for(let t=.2;t<2.0;t+=.12){
+    const cx=(S.px+S.dirX*t)|0, cy=(S.py+S.dirY*t)|0;
+    const tile=sec.grid[cy]?.[cx];
+    if(tile==='+'){
+      const d=sec.doors[`${cx},${cy}`];
+      if(!d) return;
+      if(d.act && S.act<d.act){ subtitle('Boarded from the inside. Whatever is in there wants it that way.'); return; }
+      S.transition=.85; S.pendingDoor=d; return;
+    }
+    if(tile==='T'){
+      const key=`${sec.id}:${cx},${cy}`;
+      if(S.fragsFound[key]){ toast('Nothing left on it'); return; }
+      S.fragsFound[key]=true; S.frags++; openTerminal(); return;
+    }
+    if(SOLID.includes(tile||'#')) return;
+  }
+}
+function enterSector(id,x,y,a){
+  S.sector=SECTORS[id]; S.px=x; S.py=y; S.angle=a; S.vx=S.vy=0; S.pitch=0;
+  document.querySelector('#gLoc span').textContent=S.sector.name;
+}
+
+/* ── Act progression ───────────────────────────────────────────────────── */
+function enterActTwo(){
+  if(S.act>=2) return;
+  S.act=2; S.glitch=.08;
+  const st=SECTORS.street;
+  for(let x=0;x<st.W;x++){ st.grid[0][x]='S'; st.grid[st.H-1][x]='S'; }
+  for(let y=0;y<st.H;y++){ st.grid[y][0]='S'; st.grid[y][st.W-1]='S'; }
+  /* The streetlights die, but a blacked-out town still needs landmarks or
+     the player is just wandering. The pole lamps drop to a failing flicker
+     and a few practicals stay lit — the bar's neon, the motel sign, a barrel
+     fire — so there is always something to steer by. */
+  for(const L of st.lights) if(L.p>2){ L.p*=0.18; L.f*=1.6; }
+  st.lights.push(
+    {x:44.0,y:16.4,p:2.2,f:.20},        // the Knot & Nail, still open
+    {x:12.0,y:31.6,p:1.7,f:.24},        // motel vacancy sign
+    {x:22.0,y:29.0,p:2.0,f:.26},        // somebody set the barrel alight
+    {x:27.5,y:22.5,p:1.2,f:.10});       // the intersection, faintly
+  st.name='Main Street — sealed';
+  st.entities.push(
+    {m:'possessed',kind:'enemy',x:27.0,y:24.0,r:.35,h:1.9,etype:'demon',hp:100,speed:.9,state:'cower',dialogue:'demon'},
+    {m:'possessed',kind:'enemy',x:10.0,y:22.0,r:.35,h:1.9,etype:'demon',hp:100,speed:1.0,state:'cower'},
+    {m:'possessed',kind:'enemy',x:45.0,y:23.0,r:.35,h:1.9,etype:'demon',hp:100,speed:1.0,state:'cower'});
+  packSector(st);
+  subtitle('The fog closes over the town line like a hand closing.');
+  toast('Act II — the lockdown');
+}
+
+/* ── Dialogue ──────────────────────────────────────────────────────────── */
+const dlg={open:false,tree:null,node:null,avail:null,actor:null};
+const elDlg=document.getElementById('dialogue'), elSpk=document.getElementById('speaker');
+const elLine=document.getElementById('line'), elChoices=document.getElementById('choices');
+
+function meets(r){
+  if(!r) return true;
+  if(r.hero && r.hero!==S.hero) return false;
+  if(r.flags) for(const k in r.flags) if(!!S.flags[k]!==r.flags[k]) return false;
+  if(r.actGte!==undefined && S.act<r.actGte) return false;
+  if(r.fragsGte!==undefined && S.frags<r.fragsGte) return false;
+  if(r.sober && S.counters.drinks>0) return false;
+  return true;
+}
+function fx(e){
+  if(!e) return;
+  if(e.align){ S.nihilism+=e.align.nihilism||0; S.humanism+=e.align.humanism||0; }
+  if(e.stress!==undefined) S.stress=Math.max(0,Math.min(100,S.stress+e.stress));
+  if(e.flags) for(const k in e.flags) S.flags[k]=e.flags[k];
+  if(e.counters) for(const k in e.counters) S.counters[k]=(S.counters[k]||0)+e.counters[k];
+  if(e.frag) S.frags+=e.frag;
+  if(e.drink){ S.sobriety=Math.max(0,S.sobriety-25); S.counters.drinks++; }
+  if(e.dose){ S.blood=Math.min(100,S.blood+18); S.counters.doses++; }
+  if(e.act) enterActTwo();
+  if(e.hunt && dlg.actor){ dlg.actor.state='hunt'; }
+  if(e.battery){ S.battery=Math.min(100,S.battery+e.battery); }
+}
+function openDialogue(id,actor){
+  const tree=DIALOGUE[id]; if(!tree) return;
+  dlg.open=true; dlg.tree=tree; dlg.actor=actor||null;
+  document.exitPointerLock?.();
+  elDlg.classList.add('on');
+  showNode(typeof tree.start==='function'?tree.start():tree.start);
+}
+function showNode(nid){
+  if(!nid) return closeDialogue();
+  const n=dlg.tree.nodes[nid]; if(!n) return closeDialogue();
+  dlg.node=n;
+  elSpk.textContent=n.speaker;
+  elLine.textContent=typeof n.text==='function'?n.text():n.text;
+  elChoices.innerHTML='';
+  const avail=n.choices.filter(c=>meets(c.req));
+  avail.forEach((c,i)=>{
+    const b=document.createElement('button');
+    b.className='choice'; b.dataset.k=`${i+1}.`; b.textContent=c.text;
+    if(c.tone){ const s=document.createElement('span'); s.className='tag '+c.tone;
+      s.textContent='  ['+c.tone+']'; b.appendChild(s); }
+    b.onclick=()=>{ fx(c.fx); showNode(c.next); };
+    elChoices.appendChild(b);
+  });
+  dlg.avail=avail;
+  if(avail.length) elChoices.firstChild.focus();
+}
+function handleDialogueKey(e){
+  const i=['Digit1','Digit2','Digit3','Digit4'].indexOf(e.code);
+  if(i>=0&&dlg.avail&&dlg.avail[i]){ e.preventDefault(); fx(dlg.avail[i].fx); showNode(dlg.avail[i].next); }
+  if(e.code==='Escape') closeDialogue();
+}
+function closeDialogue(){ dlg.open=false; dlg.actor=null; elDlg.classList.remove('on'); }
+
+/* Dialogue content. Lines are written for two men who have been doing this
+   too long — the philosophy sits under the sentence, not on top of it. */
+const D_ = (text,next,tone,fx,req)=>({text,next,tone,fx,req});
+const DIALOGUE = {
+ marla:{ start:'m0', nodes:{
+  m0:{speaker:'Marla — night clerk',
+   text:"You're not from the bank and you're not from the state, so I'll guess press. Third lot this month.\n\nCheckout's eleven. Ice machine's been broke since the mill closed, which tells you about how long that's been.",
+   choices:[D_("We're looking into the deaths. Six men in five weeks.",'m1'),
+            D_("Just a room. And whatever's under the counter.",'m_drink',null,null,{hero:'dean'}),
+            D_("What happened to this town, Marla?",'m_town','open',{align:{humanism:1}})]},
+  m1:{speaker:'Marla — night clerk',
+   text:"Deaths. That's a polite word for it.\n\nThey were mill men, every one. Got told the plant was losing money and they believed it, because what else do you do. Then the severance ran out.",
+   choices:[D_("You think it's just despair.",'m2','open',{align:{humanism:1},flags:{marla_open:true}}),
+            D_("Six men, same week of the month. That's not despair, that's a schedule.",'m2b','hard',{align:{nihilism:1},flags:{marla_open:true}})]},
+  m2:{speaker:'Marla — night clerk',
+   text:"I think a man can be killed slow and the paperwork still says he did it himself.\n\nBut no. Not just. Ray Hollis was the happiest of them — bought a boat in March. By April he wouldn't cross the lot after dark. Said the streetlights were watching him wrong.",
+   choices:[D_("Wrong how?",'m3')]},
+  m2b:{speaker:'Marla — night clerk',
+   text:"You've got a cop's mouth on you.\n\nFine. Schedule. They all went quiet the same way first — stopped answering. Ray Hollis stopped crossing the lot after dark. Said the streetlights were watching him wrong.",
+   choices:[D_("Wrong how?",'m3')]},
+  m3:{speaker:'Marla — night clerk',
+   text:"Said they'd hum when he was low and go dark when he wasn't. Said the whole town got heavier around three, like something leaned on it.\n\nI laughed at him. He's in the ground and I still hear the hum some nights.",
+   choices:[D_("Who bought the mill?",'m4'),
+            D_("You should leave. Tonight, if you can.",'m_leave','open',{align:{humanism:2},stress:-4})]},
+  m4:{speaker:'Marla — night clerk',
+   text:"Crossroads Holdings. Delaware address, and the address is a mailbox. Bought it profitable and ran it into the dirt in eleven months. Took the machines, left the asbestos.\n\nNobody's ever seen a single employee.",
+   choices:[D_("Where's the mill office?",'m5',null,{flags:{mill_lead:true}})]},
+  m5:{speaker:'Marla — night clerk',
+   text:"East end, past the cross street. Chain's been cut since February.\n\nTake this." + " She slides a flashlight across the counter, the big rubber kind. \"It's dark out there in a way it didn't used to be.\"",
+   choices:[D_("Thanks, Marla.",null,null,{battery:40,flags:{got_torch:true}})]},
+  m_town:{speaker:'Marla — night clerk',
+   text:"Same as every town like it. Somebody in a building I'll never see decided we cost more than we made.\n\nThe rest is just weather.",
+   choices:[D_("That's not weather. That's a decision somebody signed.",'m1','open',{align:{humanism:1}}),
+            D_("Six men are dead. Specifics, not the eulogy.",'m1','hard',{align:{nihilism:1},stress:3})]},
+  m_drink:{speaker:'Marla — night clerk',
+   text:"There's a fifth of rye under here older than you are. Eight dollars. It'll take the edge off tonight and put two more on tomorrow.\n\nYour call, honey.",
+   choices:[D_("[Drink.] Take the edge off.",'m_drank','hard',{stress:-22,drink:true}),
+            D_("[Refuse.] Not tonight.",'m_refused','open',{stress:6})]},
+  m_drank:{speaker:'Marla — night clerk',
+   text:"There he is.\n\nThe shake goes out of your hands and the town softens at the corners. First quiet you've had in four states.\n\nSomething at the back of your skull files it away as a solution.",
+   choices:[D_("...",'m0')]},
+  m_refused:{speaker:'Marla — night clerk',
+   text:"Suit yourself. Most men who sit there don't have that in them.\n\nYour hands don't stop. The hum in the lot goes up a half-step, and you notice you can hear it at all.",
+   choices:[D_("...",'m0')]},
+  m_leave:{speaker:'Marla — night clerk',
+   text:"With what car, honey? With what money?\n\nBut — thank you. Nobody's said a thing like that to me in about two years.",
+   choices:[D_("Who bought the mill?",'m4')]},
+ }},
+
+ phantom:{ start:'p0', nodes:{
+  p0:{speaker:'The shape on the green chain',
+   text:"A man made of sawdust and standing oil. Where his lungs were, the air will not hold still.\n\n\"QUOTA,\" he says, and the word arrives inside your teeth instead of through the air. \"QUOTA. THE VENT WAS ON THE FORM.\"",
+   choices:[D_("[Salt and iron.] Put it down. It's already dead.",'p_burn','hard',{align:{nihilism:2},stress:9},{hero:'dean'}),
+            D_("[Latin.] Let him finish the sentence first.",'p_talk','open',{align:{humanism:2}},{hero:'sam'}),
+            D_("Which vent? Say the number.",'p_talk','open',{align:{humanism:1}})]},
+  p_burn:{speaker:'—',
+   text:"Rock salt takes him across the chest and he comes apart like a struck bag of flour.\n\nHe doesn't scream. He says \"THANK\" and the second word is eaten by a seam in the air that should not be there — thin as a paper cut, closing with a wet sound.\n\nSomething ate your ghost. That's new.",
+   choices:[D_("[Note the tear.]",null,null,{flags:{saw_tear:true},act:true})]},
+  p_talk:{speaker:'The shape on the green chain',
+   text:"He stops. The oil on him goes still.\n\n\"FOURTEEN,\" he says. \"VENT FOURTEEN. I FILED IT IN MARCH. I FILED IT IN MARCH. THEY SAID IT WAS CAPITAL EXPENDITURE.\"\n\nHe checks his own hands, like he's making sure they're still on the form.",
+   choices:[D_("They killed you with a spreadsheet. I know. Go.",'p_rest','open',{align:{humanism:2},stress:-6,flags:{phantom_freed:true}})]},
+  p_rest:{speaker:'—',
+   text:"He goes out like a pilot light. No violence in it at all.\n\nThen the empty air where he stood puckers. A seam opens, thin as a paper cut, drinks the last of him, and closes wet.\n\nSomething is eating the dead here. Salting the bones was never going to be enough.",
+   choices:[D_("[Note the tear.]",null,null,{flags:{saw_tear:true},act:true})]},
+ }},
+
+ drinker:{ start:'d0', nodes:{
+  d0:{speaker:'A regular',
+   text:"He doesn't look up. Four empties in front of him and it isn't seven o'clock.\n\n\"If you're here about the mill I got nothing. If you're here about Ray I got less.\"",
+   choices:[D_("I'm here about the hum.",'d1'),
+            D_("[Leave him alone.]",null,'open',{align:{humanism:1}})]},
+  d1:{speaker:'A regular',
+   text:"Now he looks up.\n\n\"Everybody hears it and nobody says it, and you walk in off the highway and say it first thing.\"\n\nHe pushes a beer mat across the bar. Written over and over in ballpoint, in a hand that got worse as it went:\n\n    while town.mood < 0.2: yield\n\n\"Forty of these behind the dart board. Ray's writing. Ray couldn't type.\"",
+   choices:[D_("[Take the beer mat.]",null,'cipher',{frag:1,flags:{frag_mat:true}})]},
+ }},
+
+ demon:{ start:'x0', nodes:{
+  x0:{speaker:'A woman with black eyes, pressed into a corner',
+   text:"She has the knife you dropped and she is not using it. Her hands are over her ears.\n\n\"Don't — don't say the words. Please. I'm not doing anything. I'm just in here.\" A wet laugh. \"You think I possessed this woman to hurt her? I possessed her because a body is a *wall*.\"",
+   choices:[D_("A wall against what?",'x1'),
+            D_("[Exorcism.] Save the pitch.",'x_kill','hard',{align:{nihilism:1}},{hero:'dean'}),
+            D_("Then talk fast, and I'll consider it.",'x1','open',{align:{humanism:1}})]},
+  x1:{speaker:'A woman with black eyes',
+   text:"\"Against the *thing in the fog*. Hell has a filing system, hunter. Rules. Contracts. Ten years and a kiss and everybody knows where they stand.\"\n\n\"That out there doesn't want your soul. It doesn't want anything. It's *feeding*, and it doesn't care what it's chewing. I've been dead four hundred years and I have never once been afraid until this town.\"",
+   choices:[D_("What is it eating?",'x2'),
+            D_("You're demons. You farm misery. This is your customer base.",'x2','hard',{align:{nihilism:1}})]},
+  x2:{speaker:'A woman with black eyes',
+   text:"\"The *mood*. The flat grey nothing at the bottom of a place like this. Crossroads bought the mill and starved the town on purpose — but not for us. We were subcontractors.\" She laughs until it turns into something else.\n\n\"We thinned the veil for a client. And then the client came through, and now we can't get out either. The fog isn't keeping you in. It's keeping *us* in.\"",
+   choices:[D_("[Exorcise her.] The host might still be alive in there.",'x_free','open',{align:{humanism:2},flags:{demon_talked:true}},{hero:'sam'}),
+            D_("Where did they open it?",'x3'),
+            D_("[Kill it.] Whatever's coming, it'll come with one less door.",'x_kill','hard',{align:{nihilism:2},flags:{demon_talked:true}})]},
+  x3:{speaker:'A woman with black eyes',
+   text:"\"The house on Bellweather. Second lot past the fence.\" Her eyes go human for a second — the woman inside, surfacing, terrified. Then black again.\n\n\"There's a boy in there with a rock in his hands and light coming out of his eyes. He's been reading it out loud for nine days. Whatever he's reading, it isn't scripture. Even *I* can hear that.\"",
+   choices:[D_("[Let her go.] Get out of her and run.",'x_free','open',{align:{humanism:2},flags:{bellweather:true,demon_talked:true}}),
+            D_("[Kill it.] I don't do deals.",'x_kill','hard',{align:{nihilism:2},flags:{bellweather:true,demon_talked:true}})]},
+  x_free:{speaker:'—',
+   text:"The smoke leaves her in a long black rope and goes down through the floorboards, and the woman it leaves behind sits down hard and starts to cry, which is the best sound you've heard in two days.\n\nShe is a schoolteacher. She has been awake, inside, the entire time.",
+   choices:[D_("[Help her up.]",null,null,{flags:{bellweather:true},stress:-8})]},
+  x_kill:{speaker:'—',
+   text:"You do it fast, which is the only mercy on the menu.\n\nThe smoke burns off. The body slumps, and the body does not get back up, and you will not know until later that she was a schoolteacher and that she was awake in there the entire time.",
+   choices:[D_("[Move on.]",null,null,{flags:{bellweather:true},stress:12,counters:{killed:1}})]},
+ }},
+
+ kevin:{ start:'k0', nodes:{
+  k0:{speaker:'Kevin Tran',
+   text:"Nineteen, and he looks forty. The light coming out from under his eyelids is the wrong colour for a room this dark. There's a tablet in his lap and his hands are wrapped around it like it's cold.\n\n\"You're going to ask me to read it.\" His voice is very calm and completely wrecked. \"Everyone asks me to read it.\"",
+   choices:[D_("I need the translation, Kevin.",'k_use','hard',{align:{nihilism:1}}),
+            D_("No. Put it down. When did you last sleep?",'k_care','open',{align:{humanism:2}}),
+            D_("Kevin — look at the *syntax*. That's not a language, that's a loop.",'k_syntax','cipher',null,{fragsGte:2})]},
+  k_care:{speaker:'Kevin Tran',
+   text:"He stares at you like you've spoken something he'd stopped expecting to hear.\n\n\"Nine days. I stopped because when I sleep I see the thing that's writing it, and it's got no face, it's got a *cursor*.\" He laughs and it goes wrong halfway. \"Sorry. Sorry. That sounded insane. It sounded insane when I said it too.\"\n\n\"Nobody's asked me to stop before. Not the angels. Not God. Not your brother.\"",
+   choices:[D_("Nobody's coming to relieve you, so I will. Sleep. I'll watch the door.",'k_rest','open',{align:{humanism:3},flags:{kevin_spared:true},stress:-10}),
+            D_("You can sleep after. Read me the last plate.",'k_use','hard',{align:{nihilism:1}})]},
+  k_rest:{speaker:'Kevin Tran',
+   text:"He sleeps for eleven hours on a mattress in a house full of people who are also asleep for the wrong reasons, and nothing comes through the door, because you are standing in it.\n\nHe wakes up and asks for eggs. His eyes are just eyes.\n\n\"Okay,\" he says. \"Okay. Now show me the pieces of paper you've been collecting, because I think I know what they are and I really, really hope I'm wrong.\"",
+   choices:[D_("[Show him the fragments.]",'k_syntax','cipher',{flags:{kevin_detoxed:true}},{fragsGte:2}),
+            D_("Later. Rest.",null,null,{flags:{kevin_detoxed:true}})]},
+  k_use:{speaker:'Kevin Tran',
+   text:"He reads for four hours. Something behind his face gives way around hour three and he keeps going, because you asked, and because being useful is the only reason anybody has given him to still be here.\n\nWhen he stops he can tell you exactly what the tablet says.\n\nHe cannot tell you what year it is.",
+   choices:[D_("[Take the translation.]",'k_reveal',null,{flags:{tablet_read:true},stress:12})]},
+  k_reveal:{speaker:'Kevin Tran',
+   text:"\"Oakhaven isn't being invaded. It's being *harvested*.\"\n\n\"The despair isn't a side effect of the haunting. The despair is the *crop*. Somebody thinned the veil on purpose and then made sure this town had nothing left to feel — no work, no way out, nothing but the hum — because a flat, grey, hopeless town is easier to eat than a happy one.\"\n\n\"The demons didn't do the hard part. A holding company did.\"",
+   choices:[D_("[Go.]",null,null,{flags:{harvest_known:true}})]},
+  k_syntax:{speaker:'Kevin Tran',
+   text:"He turns the beer mat over. Then the terminal printout. Then the third one.\n\nHis hands stop shaking, which is somehow worse.\n\n\"That's not Enochian. It's not any angelic tongue and I have read all of them.\" A long pause. \"That's a *while* loop. That's a while loop with a yield in it.\"\n\n\"Why does the word of God have a scheduler.\"",
+   choices:[D_("Keep pulling that thread.",null,'cipher',{frag:1,flags:{kevin_suspects:true,harvest_known:true}})]},
+ }},
+};
+
+/* ── Terminals ─────────────────────────────────────────────────────────── */
+const FRAGMENTS=[
+`> cat /oakhaven/tick.py
+
+  for soul in town.residents:
+      soul.despair = clamp(soul.despair + AMBIENT, 0, 1)
+      if soul.despair > 0.94:
+          veil.thin(soul.position)
+          log("harvest", soul.id)
+
+> _`,
+`> tail -f render.log
+
+  WARN  entity 'whisperer' clipping through collision mesh
+  WARN  entity 'whisperer' clipping through collision mesh
+  WARN  asset 'human/hollis_r' deallocated mid-frame
+  INFO  admin session active: c.shurley
+  INFO  admin session active: c.shurley
+
+> _`,
+`> whoami
+
+  c.shurley
+
+> whoami --verify
+
+  ERROR: identity assertion failed
+  ERROR: 'c.shurley' is not root
+  ERROR: root has not logged in for 4,004,001 cycles
+
+> _`,
+`> grep -rn "free_will" ./oakhaven/
+
+  soul.py:41:   # free_will: deprecated, retained for narrative compatibility
+  soul.py:42:   free_will = property(lambda self: self.script[self.tick])
+
+> _`];
+const elPrompt=document.getElementById('prompt'), elPromptText=document.getElementById('promptText');
+function openTerminal(){
+  elPromptText.textContent=FRAGMENTS[(S.frags-1)%FRAGMENTS.length];
+  elPrompt.classList.add('on'); document.exitPointerLock?.();
+  toast(`Enochian fragment ${S.frags} recovered`);
+}
+
+/* ── HUD ───────────────────────────────────────────────────────────────── */
+function meterBar(v,max,w){ const n=Math.round((v/max)*w);
+  return '['+'#'.repeat(Math.max(0,n))+'-'.repeat(Math.max(0,w-n))+']'; }
+const elToast=document.getElementById('toast'), elSub=document.getElementById('subtitle');
+let toastT=0, subT=0;
+function toast(m){ elToast.textContent=m; elToast.classList.add('on'); toastT=2.4; }
+function subtitle(m){ elSub.textContent=m; elSub.classList.add('on'); subT=4.6; }
+
+function updateHUD(dt){
+  document.querySelector('#gWho span').textContent =
+    `${S.cfg.name} · ${S.cfg.philosophy} · hp ${Math.max(0,Math.round(S.hp))}`;
+  const gs=document.getElementById('gStress');
+  gs.querySelector('span').textContent=meterBar(S.stress,100,14)+' '+Math.round(S.stress);
+  gs.className='gauge'+(S.stress>84?' crit':S.stress>62?' warn':'');
+  const gt=document.getElementById('gTorch');
+  gt.querySelector('span').textContent = S.battery<=0 ? '[--------------] dead'
+    : meterBar(S.battery,100,14)+(S.torchOn?' on':' off');
+  gt.className='gauge'+(S.battery<22?' crit':S.torchOn?' warn':'');
+  const ga=document.getElementById('gArm');
+  ga.querySelector('span').textContent = S.driving
+    ? `driving · ${S.highBeam?'high beam':'low beam'} · ${Math.abs(S.driving.speed*8)|0} mph`
+    : S.cfg.attack==='shotgun' ? `shotgun · ${S.ammo} shells`
+    : `rite · ${S.channel>0?Math.round(S.channel*100)+'%':'ready'}`;
+  ga.className='gauge'+(S.driving?' warn':'');
+  const gl=document.querySelector('#gLight span');
+  if(gl) gl.textContent=`${S.light.name} · ${Math.round(S.gain*100)}%`;
+  const gf=document.getElementById('gFrag');
+  gf.querySelector('span').textContent=`${S.frags} / 12 · act ${S.act}`;
+  gf.className='gauge'+(S.frags>0?' phos':'');
+  if(toastT>0){toastT-=dt; if(toastT<=0) elToast.classList.remove('on');}
+  if(subT>0){subT-=dt; if(subT<=0) elSub.classList.remove('on');}
+}
+
+/* ── Loop ──────────────────────────────────────────────────────────────── */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now; S.time+=dt;
+  if(S.running){
+    if(S.transition>0){
+      S.transition-=dt;
+      if(S.transition<=.42&&S.pendingDoor){ const d=S.pendingDoor; S.pendingDoor=null;
+        enterSector(d.to,d.x,d.y,d.a); }
+    } else if(!dlg.open && !elPrompt.classList.contains('on')){
+      updatePlayer(dt); updateEntities(dt); updateAttack(dt);
+      if(S.torchOn){
+        S.battery=Math.max(0,S.battery-dt*0.55);
+        S.flicker = S.battery<22 ? (0.35+Math.random()*0.65) : 1;
+        if(S.battery<=0){ S.torchOn=false; subtitle('The torch dies in your hand.'); }
+      }
+      S.hurt=Math.max(0,S.hurt-dt*2);
+    }
+    S.dirX=Math.cos(S.angle); S.dirY=Math.sin(S.angle);
+    S.planeX=-S.dirY*FOV_PLANE; S.planeY=S.dirX*FOV_PLANE;
+
+    renderWorld(dt);
+    if(S.transition>0){
+      const amt=1-Math.abs(S.transition-.42)/.43;
+      for(let i=0;i<COLS*ROWS*amt*.9;i++)
+        put((Math.random()*COLS)|0,(Math.random()*ROWS)|0,Math.random()<.5?46:32,PAL_BASE.fog+1);
+    }
+    if(!dlg.open) drawReticle();
+    postProcess(); flush(); updateHUD(dt);
+    for(const k in keys) if(k.startsWith('once_')) keys[k]=false;
+  }
+  requestAnimationFrame(frame);
+}
+
+function begin(hero){
+  S.hero=hero; S.cfg=HEROES[hero];
+  S.ammo=S.cfg.ammo; S.stress=S.cfg.stressFloor;
+  document.body.className=hero;
+  document.getElementById('boot').classList.add('off');
+  const s=SECTORS.street; enterSector('street',s.spawn.x,s.spawn.y,s.spawn.a);
+  S.running=true; canvas.requestPointerLock?.();
+  toast('Oakhaven, Oregon — 2:40 AM');
+  subtitle(hero==='dean'
+    ? "Dean: \"Six dead mill workers and a town that doesn't show up on the weather map. Terrific.\""
+    : "Sam: \"Six people. Not six cases. Let's try to remember that this time.\"");
+}
+document.querySelectorAll('.tp').forEach(b=>{
+  b.onclick=()=>{
+    applyPreset(b.dataset.p);
+    document.querySelectorAll('.tp').forEach(o=>o.setAttribute('aria-pressed', String(o===b)));
+  };
+  b.setAttribute('aria-pressed', String(b.dataset.p===S.preset));
+});
+let net=null;
+async function boot(hero){
+  if(window.OakNet){ net=new OakNet(''); await net.connect(hero); net.bind(S); }
+  begin(hero);
+}
+document.getElementById('pickDean').onclick=()=>boot('dean');
+document.getElementById('pickSam').onclick=()=>boot('sam');
+applyPreset('dusk');
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

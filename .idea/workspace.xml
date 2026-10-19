@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="1aa1a323-0773-4047-8ccd-99e72e0ec273" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="Sayan Sarkar &lt;72155617+psypherion@users.noreply.github.com&gt;" />
+      </list>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;psypherion&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/psypherion/oakhaven.git&quot;,
+    &quot;accountId&quot;: &quot;79e7d9a2-5a8b-42fd-b657-e1727b145ff5&quot;
+  }
+}</component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0000012617150331" />
+      <entry key="MS500" value="1.0862286664483953" />
+      <entry key="S2" value="1.8838134672846099" />
+      <entry key="S5" value="2.43887172388588" />
+      <entry key="S10" value="2.69564572303955" />
+      <entry key="S30" value="2.892732513642252" />
+      <entry key="S60" value="2.9456033731411817" />
+      <entry key="M2" value="2.972608162781702" />
+      <entry key="M5" value="2.9889964557691853" />
+      <entry key="M10" value="2.994490395819338" />
+      <entry key="M15" value="2.9963251878200685" />
+      <entry key="M30" value="2.998161721979444" />
+      <entry key="H1" value="2.9990806429005987" />
+      <entry key="H2" value="2.9995402669147033" />
+      <entry key="H4" value="2.999770119821788" />
+      <entry key="D1" value="2.999961684742995" />
+      <entry key="W1" value="2.9999945263454717" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9592649293713936" />
+      <entry key="MS500" value="1.0712487905996193" />
+      <entry key="S2" value="1.865426830475951" />
+      <entry key="S5" value="2.4275662899305765" />
+      <entry key="S10" value="2.689088101110576" />
+      <entry key="S30" value="2.8903161157824364" />
+      <entry key="S60" value="2.944364320142567" />
+      <entry key="M2" value="2.971980761766602" />
+      <entry key="M5" value="2.9887435845174317" />
+      <entry key="M10" value="2.9943636399573883" />
+      <entry key="M15" value="2.9962406126174908" />
+      <entry key="M30" value="2.998119398698037" />
+      <entry key="H1" value="2.999059472333709" />
+      <entry key="H2" value="2.999529679398942" />
+      <entry key="H4" value="2.9997648255057316" />
+      <entry key="D1" value="2.9999608022794533" />
+      <entry key="W1" value="2.9999944002773526" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3KuuYu0SO6PlLayrKNPa4zXGGPv" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/ongbongchhong/Downloads/ossum/oakhaven&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;GitStage.ChangesTree.GroupingKeys&quot;: [
+      &quot;directory&quot;,
+      &quot;module&quot;,
+      &quot;repository&quot;
+    ]
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-WS-261.24374.125" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1aa1a323-0773-4047-8ccd-99e72e0ec273" name="Changes" comment="" />
+      <created>1792419824959</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1792419824959</updated>
+      <workItem from="1792419825961" duration="431000" />
+      <workItem from="1792420273529" duration="770000" />
+    </task>
+    <task id="LOCAL-00001" summary="Version 1">
+      <option name="closed" value="true" />
+      <created>1792419978850</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1792419978850</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Version 1">
+      <option name="closed" value="true" />
+      <created>1792420431859</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1792420431859</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Initial commit" />
+    <MESSAGE value="Version 1" />
+    <option name="LAST_COMMIT_MESSAGE" value="Version 1" />
+  </component>
+</project>
