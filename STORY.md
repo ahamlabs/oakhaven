@@ -685,3 +685,32 @@ These cases are built on the shared systems. Each one answers a small question a
 | IV · The Unchosen | Liberation (together), Equilibrium, the Unfinished Sunday, or back to Chuck | `tg_choice` |
 
 **The fourth wall** (`src/59f_fourth.js`). The location is requested in `begin` and `restore`, before Act I, so the request and the moment are far apart. Only the place name is cached (`oakhaven.fw.town`). The moment arms 25 seconds into Act III on the street and fires on the next keypress, since a browser only allows fullscreen from a user gesture. It uses `FW.loc` from GPS plus BigDataCloud, or `tzTown()`, or the words "your town".
+
+
+## 12. As built: the arsenal, the guises, and three other places (1.7)
+
+**Weapons** (`src/57r_vmatlas.js`, `src/57s_arsenal.js`, `src/59g_style.js`).
+- The painted sprites are a 3×3 sheet of 240×180 frames, embedded as a PNG and decoded at load. Bright pixels on the blades, the Ring and the holy water are marked emissive, so they glow in the dark.
+- `S.settings.vmStyle` (painted, classic or original) picks the set. Classic (`src/57v_classicart.js`) is the 1.x look rebuilt properly. Every part is drawn as a mask and shaded with a material ramp: a lit bevel on the edges facing the light, a dark bevel on the far edges, and cylinder shading on round parts. The hands are built from a sleeve, wrist, palm, thumb and four fingers drawn in front of the grip, with contact shadows. Original is the untouched 1.x sprites, and the muzzle-flash positions follow it.
+- Slot 4 cycles through the owned blades. The Ring (slot 8) is a `divine` weapon on a 7-second cooldown.
+
+**Guises** (`src/57t_guises.js`).
+- Once per act: the dog (health under 35, outdoors), the crow (guns empty, enemy hunting), and the wind (at least 3 enemies hunting, health under 55).
+- The flower seller appears in Act II.
+- Tears open from:
+  - the deer (bell case closed, or Act II)
+  - the bus stop (Act II, after the vigil)
+  - the crow on the wire (Act III, after Lily)
+- `inv_().guises` remembers what you saw. The altar line gA11 lists them back to you.
+
+**Dimensions** (`src/57u_dimensions.js`).
+- `DIMS[k]` gives each one its sector, its home tear and its arrival narration. `DIM_LOOK` gives each a CSS filter on the world canvas, plus a sky.
+- Bosses run through `BOSS_AI` and `BOSS_DIE`:
+  - a telegraphed shockwave (a red ring, then the hit)
+  - a summon at certain health thresholds
+  - the King's silence, which stops guns
+  - the Choir's shield until its throats fall, and its countdown
+- Bosses can't be evicted by a rite or freed by the Ring.
+- `dimFinish` sends a message from the present when a place is done, and each place adds an epilogue line.
+
+**The darker material.** The register in 1951 is the only place the murdered are named, and it's written as a document of record. Nothing is shown. Margaret's story is about her being believed, and about her choosing to speak, which is the best outcome on offer.

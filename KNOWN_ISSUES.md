@@ -16,3 +16,6 @@ To report a bug, open the pause menu and note the chapter shown there, the rende
   - Some browsers, and embedded previews, refuse fullscreen. The moment then plays in the window.
   - Location lookup needs network access to BigDataCloud. Offline, or if you decline, the town comes from your time zone. A UTC time zone shows "your town".
 - **Names.** Very short custom names can collide with ordinary words, because the substitution matches whole words. Renaming Dean to "Sam", for example, makes the two brothers indistinguishable on screen.
+
+- **Weapon art.** The painted weapons always show dark sleeves, whatever outfit you're wearing. The Classic and Original styles still match the outfit.
+- **The Inverted Nave.** Its far half is drawn upside down on purpose. If that's uncomfortable, lower Visual intensity in Settings.

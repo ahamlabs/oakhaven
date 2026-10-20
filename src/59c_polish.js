@@ -221,7 +221,8 @@ const elGate=(()=>{ const d=document.createElement('div'); d.id='gate'; document
 function showWarning(then){
   elGate.innerHTML=`<div class="gt"><small>Before you go in</small><h1>Oakhaven</h1>
     <p>A horror game about a dying town. It contains:</p>
-    <ul><li>supernatural and body horror, and blood</li><li>death, grief, and the death of a child</li><li>suicide (referred to, not shown)</li><li>possession, and the killing of possessed people</li><li>alcohol and drug use</li><li>workplace negligence and corporate harm</li><li>flashing images, screen shake and colour tearing (all adjustable in Settings)</li></ul>
+    <ul><li>supernatural and body horror, and blood</li><li>death, grief, and the death of a child</li><li>suicide (referred to, not shown)</li><li>possession, and the killing of possessed people</li><li>alcohol and drug use</li><li>workplace negligence and corporate harm</li><li>a cult, and the ritual murder of children and women (recorded in documents, never shown)</li><li>domestic abuse (spoken about, and confronted)</li><li>flashing images, screen shake and colour tearing (all adjustable in Settings)</li></ul>
+    <p class="fan">If any of this touches your own life, help is there. US: National Domestic Violence Hotline 1-800-799-7233. India: Women Helpline 181, Childline 1098. UK: Refuge 0808 2000 247.</p>
     <p class="fan">Oakhaven is a free, non-commercial fan work. It isn't affiliated with or endorsed by the owners of <i>Supernatural</i>.</p>
     <div class="gb"><button class="opt" data-set>Settings first</button><button class="opt on" data-go>I understand — continue</button></div></div>`;
   elGate.classList.add('on');

@@ -100,8 +100,8 @@ section('the bell beneath the water');
   K.enterSector('carver',9.4,4.5,Math.PI); K.ks(2); talk(K,'ruth',K.SECTORS.carver.entities.find(e=>e.dialogue==='ruth')); use(K,'carver','c_ceiling');
   read(K,'library','parish');
   K.enterSector('reservoir',20,15.6,-Math.PI/2); K.ks(2);
-  /* the water won't let you in */
-  K.S.py=12.5; K.ks(2); ok(K.S.py>13.9,`walked on water (y ${K.S.py.toFixed(2)})`);
+  /* before the bell rings you can swim, but the current pushes you back to the shore */
+  K.S.py=11.5; const y0=K.S.py; K.ks(30); ok(K.S.py>y0+.3,`the current did not push back (y ${K.S.py.toFixed(2)})`);
   K.USES.res_water(); K.ks(60*14); ok(F.bell_rang,'the bell did not ring'); ok(!K.S.flipped,'still flipped after the reflection');
   ok(K.SECTORS.reservoir.grid[8][20]==='c','the water did not stand back');
   for(const [a,b] of [['log','tally'],['map','parish'],['ceiling','reflection'],['ruth','reflection'],['parish','keeper']]) if(a!=='parish'||F.res_keeper) ok(K.tryLink('bell',a,b).ok||b==='keeper',`bell link ${a}+${b}`);

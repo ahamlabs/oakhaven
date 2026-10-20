@@ -1,5 +1,72 @@
 # Changelog
 
+## 1.7.0: the arsenal, the guises, and three other places
+
+**Fixed: stranded at Pike's Reservoir**
+- Settling the bell case while standing on the old stone path used to sink the path under you, and the water rule then pinned you in place forever.
+- The stones now wait until you've stepped off before they go under.
+- You can now swim anywhere there's water: it's slow and it costs stamina. If you tire out, you're carried back to the nearest bank.
+- Saves made while stuck will free themselves when loaded.
+
+**Weapons**
+- The first-person weapons are now painted pixel art: the revolver, sawed-off, flare gun, crowbar, holy water, the demon blade, the angel blade, the archangel's blade and the Ring.
+- **Weapon style** (Settings → Weapons, or the quick wheel):
+  - **Painted**: the new pixel art
+  - **Classic**: the old flat, chunky look, rebuilt properly for all nine weapons:
+    - one camera angle and one light, shared by every weapon
+    - each part shaded by its material: blued and bright steel, walnut, leather, glass, gold, ivory, cloth
+    - hands with a palm and heel, a thumb from the side of the palm, four fingers of different lengths wrapped round the grip, contact shadows, and a sleeve cuff
+    - the revolver: a six-flute cylinder wider than the barrel, sights, hammer, guard, and a walnut grip with the index finger resting along the frame
+    - the sawed-off: two separate bores, a break-action receiver with a hinge pin, the fore-end cupped in the left hand, a pistol grip and stock
+    - the crowbar: a gooseneck with a split claw, and a flat pry end
+    - a real glass flask with an engraved cross, a drop-point knife, a ridged angel blade, the archangel's winged guard, and the Ring hovering over an open palm
+  - **Original**: exactly as the weapons looked before
+- **Blades in slot 4:**
+  - the **demon blade** (formerly the knife)
+  - the **angel blade**, which Castiel gives you the first time he finds you
+  - the **archangel's blade**, found in the ash in 2031, which cuts everything in an arc
+
+  Press 4 again to change blades.
+- **The Ring of Severance** (slot 8, from the Formless One): every hold in sight is cut at once. The possessed are freed, everything else takes heavy damage and is stunned. It then needs seven seconds to turn.
+- **Armour:**
+  - **Mantle of Feathers**: 25% less damage
+  - **Ash-plate**: armour refills to 50
+  - **Wren's Cloak**: ghosts hit half as hard
+
+**The Formless One, in other shapes**
+- He helps before the end, in disguise, and leaves a dark feather each time:
+  - a black dog that heals you when you're badly hurt
+  - a crow that brings ammunition when your guns are empty in a fight
+  - the wind, which knocks a crowd of attackers down when you're outnumbered
+  - an old woman whose marigold refuses your death once
+- He also opens three tears to other places:
+  - a deer at the reservoir
+  - a woman at a bus stop with no buses
+  - a crow on the wire above the church
+- At the altar he admits to every disguise you met.
+
+**Three other places, each with its own look, people, boss and reward**
+- **The Drowned Year (Wren's Valley, 1951, sepia).**
+  - The valley before the dam, and the Congregation that fed the hunger under the crossroads: eleven names in a register, seven of them children.
+  - Margaret Hale, whose husband beats her, and their daughter Hannah, chosen as the last offering.
+  - You can let Margaret confront him herself.
+  - Boss: **Reverend Silas Ashby, Who Listens**. Amos Wren, the bell keeper, gives you his cloak.
+  - Afterwards a letter arrives from Hannah, 84, in Portland.
+- **The Ash Morning (Oakhaven, 2031, grey).**
+  - The morning after the night goes Chuck's way.
+  - Who survived, and whose grave it is, depends on your arcs and on Kevin.
+  - Boss: **the Quiet King**, which silences guns, so use blades. Rewards: the archangel's blade, and an Ash-plate made from the Impala's doors.
+- **The Inverted Nave (violet, its far half upside down).**
+  - Where the hunger keeps the voices of everyone it ate.
+  - Boss: **the Choir That Counts**. Silence its four throats, then end it before it reaches zero.
+  - The Formless One gives you the Ring and the Mantle.
+
+**Content warning updated** for the cult storyline: ritual murder of children and women is recorded in documents and never shown, and domestic abuse is spoken about and confronted. Help lines are listed on the warning screen.
+
+**Tests**
+- `tests/v17.js` covers the reservoir, the arsenal, weapon styles, the guises, and all three places from start to finish.
+- `tests/v17_browser.js` takes screenshots of each.
+
 ## 1.6.0: names, both brothers, hearts, and the one at the end
 
 **Names**

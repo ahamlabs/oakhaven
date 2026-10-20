@@ -114,13 +114,26 @@ function bellRings(){
     say('narr','When it stops, the water has stood back from a line of old foundation stones, as if it’s holding a door open. At the end of the line, half-sunk, there’s a bell.',6); });
   later(12.5,()=>say(brother(),isDean()?'That was her. Elise. She looked right at us.':'That was the girl. Elise. Sam, she was looking at us.',3.4));
 }
-/* the water is cold and doesn't want you, until it does */
-let resDry=null;
-INV_UPDATES.push(dt=>{ if(S.sector.id!=='reservoir'){ resDry=null; return; }
-  const c=S.sector.grid[S.py|0]?.[S.px|0];
-  if(c==='w'){ if(resDry){ S.px=resDry[0]; S.py=resDry[1]; S.vx=S.vy=0; }
-    if(!S.flags.waterSaid||S.time-S.flags.waterSaid>8){ S.flags.waterSaid=S.time; say('narr','The water is very cold. Somewhere under it, something is ringing.',3,{now:true}); } }
-  else resDry=[S.px,S.py]; });
+/* the water is cold and doesn't want you, until it does. You can swim in it.
+   Before the bell has rung, a current keeps you near the shore. If you tire,
+   you're carried back to the nearest dry ground. Nothing can strand you. */
+function nearestDry(s,x,y){ const W=s.grid[0].length, H=s.grid.length, seen=new Set(), q=[[x|0,y|0]];
+  while(q.length){ const [cx,cy]=q.shift(), k=cx+','+cy; if(seen.has(k)) continue; seen.add(k);
+    if(cx<0||cy<0||cx>=W||cy>=H) continue; const c=s.grid[cy][cx];
+    if(c!=='w'&&!hits(s,cx+.5,cy+.5,.3)) return [cx+.5,cy+.5];
+    if(c==='w'||c===' '||c==='.'||c==='c') for(const [dx,dy] of [[0,1],[1,0],[-1,0],[0,-1]]) q.push([cx+dx,cy+dy]); }
+  return [s.spawn.x,s.spawn.y]; }
+function inWater(){ const r=S.sector.grid[S.py|0]; return !!r&&r[S.px|0]==='w'; }
+INV_UPDATES.push(dt=>{ const F=S.flags;
+  if(!inWater()||S.driving){ if(S.swimming){ S.swimming=false; } return; }
+  if(!S.swimming){ S.swimming=true; sfx('step'); if(!F.swimTip){ F.swimTip=true; toast('Swimming · slow, and it tires you · stamina'); } }
+  /* slow, heavy, cold */
+  S.vx*=Math.pow(.18,dt); S.vy*=Math.pow(.18,dt); S.stamina=Math.max(0,S.stamina-7*dt); S.staminaT=1;
+  if(S.sector.id==='reservoir'&&!F.bell_rang&&S.py<12.5){ S.py+=1.6*dt;                 // the current
+    if(!F.waterSaid||S.time-F.waterSaid>8){ F.waterSaid=S.time; say('narr','The water is very cold, and it pushes you back toward the shore. Somewhere under it, something is ringing.',3.4,{now:true}); } }
+  if(S.stamina<=0){ const [x,y]=nearestDry(S.sector,S.px,S.py); S.px=x; S.py=y; S.vx=S.vy=0; S.stamina=30; S.hp=Math.max(1,S.hp-5); S.swimming=false;
+    say('narr','Your arms give out. You don’t remember the last few strokes, only the stones under your knees on the bank.',3.6,{now:true}); }
+});
 USES.res_keeper=()=>{ if(caseDecision('bell')) return openMenu('The bell keeper','He’s still holding the rope.',[{text:'Step back'}]);
   S.flags.res_keeper=true;
   openMenu('The bell keeper',"Bones, tangled in what’s left of the bell rope, the rope wound twice round the wrists. Amos Wren didn’t drown when the valley flooded. He kept ringing. He was ringing when the water closed over the bell, and some part of him never stopped.\n\nThe bell doesn’t call the dead. It replays the last moment somebody refuses to accept. Ruth Carver’s refusal has a daughter in it.",
@@ -128,7 +141,12 @@ USES.res_keeper=()=>{ if(caseDecision('bell')) return openMenu('The bell keeper'
      {text:(isDean()?'Sam':'Dean')+' goes into the reflection to bring Elise back.',note:'she will come back different',act:()=>bellEnd('answer')},
      {text:'Leave it. Take the evidence and go.',note:'the bell will be heard somewhere else',act:()=>bellEnd('leave')}]); };
 function bellEnd(k){ decide('bell',k); const F=S.flags, s=SECTORS.reservoir;
-  const shut=()=>{ for(let y=6;y<=13;y++) for(let x=19;x<=21;x++) s.grid[y][x]='w'; pack(s); for(const e of s.entities) if(e.resBell) e.hidden=true; };
+  /* the stones only sink once nobody is standing on them */
+  const shut=()=>{ const close=()=>{ for(let y=6;y<=13;y++) for(let x=19;x<=21;x++) s.grid[y][x]='w'; pack(s); for(const e of s.entities) if(e.resBell) e.hidden=true; };
+    const onStones=()=>S.sector===s&&S.px>=18.6&&S.px<=22.4&&S.py>=5.5&&S.py<=14;
+    if(!onStones()) return close();
+    s.closing=true; if(!F.stonesSaid){ F.stonesSaid=true; say('narr','The water is coming back over the stones. Walk back to the shore.',4); }
+    const w=()=>{ if(!onStones()||S.sector!==s){ s.closing=false; close(); } else later(.5,w); }; later(.5,w); };
   if(k==='silence'){ F.bell_silenced=true; sfx('salt'); sfx('riteEnd'); S.shake=.5;
     say('narr','Salt in the mouth of it, then iron. The clapper cracks like a knuckle. The bell makes one last sound, not a ring, more like someone letting out a breath they have held since 1951.',6,{now:true});
     later(6,()=>{ shut(); const r=SECTORS.carver.entities.find(e=>e.look==='ruth'); if(r) r.dialogue='ruth_after'; closeCase('bell'); }); }

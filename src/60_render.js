@@ -282,7 +282,7 @@ function drawRain(dt){
 function drawViewmodel(){
   if(S.driving||S.cut||!VM) return;
   const W=WEAPONS[S.weapon], sp=VM[S.weapon==='journal'?(S.channel>0?'journalLit':'journal'):S.weapon]; if(!sp) return;
-  const k=IH/200, dw=(sp.w*k*MODE.par)|0, dh=(sp.h*k)|0;
+  const k=IH/200, sc=sp.scale||1, dw=(sp.w*sc*k*MODE.par)|0, dh=(sp.h*sc*k)|0;
   let ox=IW/2-dw/2+Math.sin(S.bob)*5*k*S.bobAmp+S.sway*7*k;
   let oy=IH-dh+Math.abs(Math.cos(S.bob))*4*k*S.bobAmp+S.recoil*9*k+S.switchT*dh*2.4+(S.ground?0:-S.vz*3*k)+S.landDip*120*k+(S.crouch?6*k:0);
   if(S.swing>0&&W.swingT){ const p=1-S.swing/W.swingT, a=Math.sin(p*Math.PI); ox-=a*46*k; oy-=a*12*k; }
@@ -406,9 +406,10 @@ function drawHUD(){
   txt(ammo===null?(Wn.kind==='rite'?`${S.rites.size} RITES`:'—'):String(ammo),rx+6*v,ry+12*v,17*v,ammo===0?'#e05a4a':'#e8dcc4');
   if(S.torchOn||S.battery<100) txt(`TORCH ${Math.ceil(S.battery)}%${S.torchOn?' ON':''}`,rx+rw-6*v,ry+14*v,4.6*v,S.battery<22?'#e05a4a':'#d9a441','right');
   txt(`$${S.cash}`,rx+rw-6*v,ry+22*v,5.4*v,'#18c866','right');
-  WEAPON_ORDER.forEach((wid,i)=>{ const own_=S.owned.has(wid), sel=wid===S.weapon, bx=rx+6*v+i*16.5*v, by=ry+33*v;
-    octx.fillStyle=sel?'#d9a441':own_?'rgba(200,200,190,.12)':'rgba(255,255,255,.03)'; octx.fillRect(bx,by,14*v,7*v);
-    txt(String(i+1),bx+7*v,by+3.6*v,4.6*v,sel?'#0b0705':own_?'#cbbfae':'#3f4a50','center','middle'); });
+  const sw_=(rw-10*v)/WEAPON_ORDER.length;
+  WEAPON_ORDER.forEach((wid,i)=>{ const blade=wid==='knife'&&typeof BLADES!=='undefined', own_=S.owned.has(wid)||(blade&&BLADES.some(b=>S.owned.has(b))), sel=wid===S.weapon||(blade&&BLADES.includes(S.weapon)), bx=rx+6*v+i*sw_, by=ry+33*v;
+    octx.fillStyle=sel?'#d9a441':own_?'rgba(200,200,190,.12)':'rgba(255,255,255,.03)'; octx.fillRect(bx,by,sw_-2.5*v,7*v);
+    txt(String(i+1),bx+(sw_-2.5*v)/2,by+3.6*v,4.6*v,sel?'#0b0705':own_?'#cbbfae':'#3f4a50','center','middle'); });
 
   if(S.driving){ const sp=Math.abs(S.driving.speed*8)|0;
     plate(cx-40*u,H-26*u,80*u,18*u); txt(`${sp} MPH`,cx,H-21*u,8*u,'#e8dcc4','center');
@@ -619,6 +620,6 @@ function updateBoot(dt){
     cx.putImageData(id,0,0);
   });
 }
-applyPreset('dusk'); setRenderer('doom'); syncPickers(); resize();
+applyPreset('dusk'); setRenderer('cinematic'); syncPickers(); resize();
 bootResume();
 requestAnimationFrame(frame);
