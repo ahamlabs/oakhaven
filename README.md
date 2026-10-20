@@ -6,7 +6,7 @@ post-process. You get a drivable Impala, buildings you can walk into, a
 paper-doll cast, in-engine cutscenes, and a story that unfolds through
 conversations you overhear and conversations you choose.
 
-**Version 1.6.0.** This is a free, non-commercial fan work. See `CREDITS.md` for the licence and the *Supernatural* notice, `CHANGELOG.md` for what changed, and `KNOWN_ISSUES.md` for limitations.
+**Version 1.7.0.** This is a free, non-commercial fan work. See `CREDITS.md` for the licence and the *Supernatural* notice, `CHANGELOG.md` for what changed, and `KNOWN_ISSUES.md` for limitations.
 
 **Supported:** desktop Chrome, Edge, Firefox or Safari 17+, with keyboard and mouse or a standard gamepad. Touch screens aren't supported. The game is one HTML file that runs offline, with no server needed.
 
@@ -79,6 +79,15 @@ Dean, Sam, Kevin, Crowley, the sheriff, Sarah Lindqvist, Dr. Halvorsen, Hank
 nightgown shows up on Main Street in Act II. Castiel and Chuck are drawn and
 ready for later acts. `node tests/castsheet.js out.png` renders the whole cast
 on one sheet.
+
+## The arsenal, the guises, and other places (1.7)
+
+- **Weapons.** Painted weapon art, with a choice of style in Settings → Weapons. Three blades share slot 4, and the Ring of Severance is slot 8.
+- **The Formless One's guises.** He helps in disguise: a black dog, a crow, the wind, an old woman with marigolds.
+- **Three other places.** He opens tears to 1951, to 2031, and to the Inverted Nave. Each has its own story, boss and reward.
+- **Swimming.** You can now swim, so nothing at the reservoir can strand you.
+
+See `STORY.md` §12.
 
 ## Names, both brothers, and the one at the end (1.6)
 

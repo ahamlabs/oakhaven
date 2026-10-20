@@ -48,7 +48,8 @@ for(const o of G.OBJECTIVES) ok(!G.hits(sec(o.sector),o.x,o.y,.2), `objective ${
 const VIA_FOLD=new Set(['hollis','cathedral']);
 for(const a of Object.keys(G.SECTORS)) for(const b of Object.keys(G.SECTORS)) if(a!==b&&!VIA_FOLD.has(b)&&G.SECTORS[a].region===G.SECTORS[b].region) ok(G.routeDoor(a,b), `no route ${a}→${b}`);
 /* every remote region has an Impala to drive home in */
-for(const id in G.SECTORS){ const s=G.SECTORS[id]; if(s.region&&s.outdoor) ok(s.entities.some(e=>e.kind==='vehicle'),`${id}: no Impala to get home`); }
+for(const id in G.SECTORS){ const s=G.SECTORS[id]; if(s.region&&s.outdoor&&!s.dimension) ok(s.entities.some(e=>e.kind==='vehicle'),`${id}: no Impala to get home`);
+  if(s.dimension) ok(s.entities.some(e=>e.use==='tear_home'),`${id}: no way back`); }
 
 section('dialogue graphs');
 for(const id in G.DIALOGUE){ const tr=G.DIALOGUE[id];

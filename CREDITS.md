@@ -14,3 +14,14 @@
 ## The Formless One
 
 The figure at the end of Oakhaven is adapted, with respect, from the Krishna of the Mahabharata attributed to Vyasa: the Udyoga Parva's envoy, the teacher of the Bhagavad Gita in the Bhishma Parva, the Sabha Parva, and the Mausala Parva. His look reimagines that figure in a gothic register. Much of his dialogue in the altar scenes comes from the project author's own design notes. The rest was written for this game. None of it quotes the epic. The game makes no theological claim, and it isn't meant to represent any tradition's understanding of Krishna.
+
+
+## Weapon art
+
+The painted first-person weapons (1.7) come from a reference sheet supplied by the project's author. They were cut out, cleaned and packed into the game's sprite sheet.
+
+## If any of this touches your life
+
+- US: National Domestic Violence Hotline, 1-800-799-7233
+- India: Women Helpline 181, Childline 1098
+- UK: Refuge, 0808 2000 247

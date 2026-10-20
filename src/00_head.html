@@ -393,6 +393,11 @@ label.opt input[type=checkbox]{accent-color:#d9a441}
 #vishva.on{display:block}
 #dlg{z-index:6}
 #dlg.absolute{background:linear-gradient(90deg,rgba(4,4,10,.92) 0%,rgba(4,4,10,.82) 55%,rgba(4,4,10,.15) 75%,rgba(4,4,10,0))}
+#bossbar{position:fixed;left:50%;top:22px;transform:translateX(-50%);z-index:30;display:none;width:min(560px,70vw);pointer-events:none;text-align:center}
+#bossbar.on{display:block}
+#bossbar b{display:block;font-weight:400;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:#e8dcc4;text-shadow:0 1px 2px #000;margin-bottom:5px}
+#bossbar i{display:block;height:7px;background:rgba(10,8,10,.75);border:1px solid rgba(232,220,196,.35)}
+#bossbar s{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7a1a22,#c43a3a);text-decoration:none;transition:width .15s}
 </style>
 </head>
 <body>
@@ -427,6 +432,8 @@ label.opt input[type=checkbox]{accent-color:#d9a441}
       <button class="opt rp" data-r="build">Build 320×240</button>
       <button class="opt rp" data-r="modern">Modern 480×270</button>
       <button class="opt rp" data-r="crisp">Crisp 640×400</button>
+      <button class="opt rp" data-r="ultra">Ultra 960×600</button>
+      <button class="opt rp" data-r="cinematic">Cinematic 1280×720</button>
       <button class="opt rp" data-r="ascii">ASCII</button>
     </div>
     <div class="rnote" id="rnote"></div>
